@@ -1,210 +1,81 @@
-/* ==========================================
-   FADMINAS MARKETPLACE - CORE STYLES
-   DESIGN SYSTEM: DARK MODE / BUSINESS PRO
-   ========================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-
+/* Custom Properties para Identidade Visual */
 :root {
-    --bg-main: #0f172a;
-    --bg-card: #1e293b;
-    --accent: #3b82f6;
-    --accent-hover: #2563eb;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --border: #334155;
-    --success: #22c55e;
-    --danger: #ef4444;
+    --primary: #001f3f;
+    --accent: #ef4444;
+    --bg-light: #f9fafb;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* Melhora o toque no PWA */
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    overflow-x: hidden;
-}
-
-/* --- Scrollbar Customizada (Visual Premium) --- */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-main); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
-
-/* --- Navegação e Sidebar --- */
-.sidebar-item {
-    display: flex;
-    align-items: center;
-    padding: 0.875rem 1.25rem;
-    color: var(--text-secondary);
-    border-radius: 0.75rem;
-    font-weight: 600;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    border: 1px solid transparent;
-}
-
-.sidebar-item:hover, .sidebar-item.active {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--accent);
-    border-color: rgba(59, 130, 246, 0.2);
-}
-
-.sidebar-item.active i {
-    transform: scale(1.1);
-}
-
-/* --- Botões de Categoria (UX Mobile) --- */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-.category-btn {
-    white-space: nowrap;
-    padding: 0.6rem 1.5rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 9999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    transition: all 0.3s ease;
-}
-
-.category-btn:hover {
-    border-color: var(--accent);
-    color: var(--text-primary);
-}
-
-.category-btn.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-/* --- Cards de Produto (A Vitrine do Negócio) --- */
-.product-card {
-    background: var(--bg-card);
-    border-radius: 1.5rem;
-    border: 1px solid var(--border);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.product-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    border-color: var(--accent);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
-}
-
-.product-card img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 1.5rem 1.5rem 0 0;
-    background: #0f172a;
-}
-
-/* --- Badges de Status --- */
-.product-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    backdrop-filter: blur(4px);
-    z-index: 10;
-}
-
-.product-badge.official { background: rgba(59, 130, 246, 0.8); color: white; }
-.product-badge.partner { background: rgba(245, 158, 11, 0.8); color: white; }
-.product-badge.urgent { background: rgba(239, 68, 68, 0.8); color: white; }
-
-/* --- Modais e Overlays --- */
-#modalOverlay.visible {
-    display: block;
-    opacity: 1;
-}
-
-.modal-visible {
-    display: flex !important;
-    animation: modalIn 0.3s ease-out;
-}
-
-@keyframes modalIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- Itens do Carrinho --- */
-.cart-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(15, 23, 42, 0.5);
-    border-radius: 1rem;
-    border: 1px solid var(--border);
-}
-
-.cart-item-img {
-    width: 60px;
-    height: 60px;
-    border-radius: 0.75rem;
-    object-fit: cover;
-}
-
-.cart-item-qty {
-    display: flex;
-    align-items: center;
-    background: var(--bg-main);
-    border-radius: 0.5rem;
-    padding: 2px;
-}
-
-.cart-item-qty button {
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
-    border: none;
-    background: transparent;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.cart-item-qty button:hover { background: var(--border); }
-
-/* --- Mobile Fixes (PWA Feeling) --- */
-@media (max-width: 1024px) {
-    #sidebar.active {
-        transform: translateX(0);
-        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
-    }
-}
-
-/* Estilo para quando a seção não está ativa */
+/* Transições SPA */
 .page-section {
     display: none;
-    animation: fadeIn 0.4s ease-in;
+    animation: slideUp 0.4s ease-out;
 }
 
 .page-section.active {
     display: block;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
+
+/* Sidebar Styling */
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.75rem;
+    color: #94a3b8;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* No seu styles.css */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.sidebar-item.active {
+    background-color: var(--accent);
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4);
+}
+
+/* Cards de Produto (Visão de Marketplace) */
+.pizza-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pizza-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 1024px) {
+    #sidebar.hidden-mobile {
+        transform: translateX(-100%);
+    }
+}
+
