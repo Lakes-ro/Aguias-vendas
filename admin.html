@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | AGUIAS DE CRISTO</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { --bg-dark: #0a0e17; --glass: rgba(255, 255, 255, 0.05); }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: white; margin: 0; overflow: hidden; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; }
+        .neon-text-blue { text-shadow: 0 0 10px #3b82f6; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay" class="fixed inset-0 bg-[#06090f] z-[100] flex flex-col items-center justify-center text-white">
+        <div class="glass-card p-10 w-full max-w-sm text-center border-blue-500/30">
+            <div class="w-20 h-20 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h2 class="text-3xl font-black mb-2 tracking-tighter">ÁREA RESTRITA</h2>
+            <p class="text-sm text-gray-400 mb-8">DIRETORIA DO CLUBE</p>
+            
+            <form id="loginForm" class="space-y-4">
+                <input type="password" id="adminPass" placeholder="Senha Mestra" class="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-center text-2xl tracking-widest focus:ring-2 ring-blue-500 outline-none">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-black transition">
+                    ACESSAR SISTEMA
+                </button>
+            </form>
+            <p id="loginError" class="text-red-400 text-xs mt-4 hidden font-bold">Senha incorreta.</p>
+        </div>
+    </div>
+
+    <div id="mainDashboard" class="flex h-screen opacity-0 transition-opacity duration-1000">
+        
+        <div class="flex h-screen bg-[#050505] text-white overflow-hidden">
+    <aside class="w-64 border-r border-white/10 flex flex-col p-6 gap-8">
+        <h1 class="text-xl font-black tracking-tighter text-blue-500">CLUBE ADMIN</h1>
+        
+        <nav class="flex flex-col gap-2">
+            <button onclick="showSection('dash')" class="nav-btn active" id="btn-dash">
+                <i class="fas fa-chart-line w-6"></i> Dashboard
+            </button>
+            <button onclick="showSection('orders')" class="nav-btn" id="btn-orders">
+                <i class="fas fa-shopping-basket w-6"></i> Pedidos
+            </button>
+            <button onclick="showSection('inventory')" class="nav-btn" id="btn-inventory">
+                <i class="fas fa-pizza-slice w-6"></i> Estoque/Produtos
+            </button>
+            <button onclick="showSection('expenses')" class="nav-btn" id="btn-expenses">
+                <i class="fas fa-wallet w-6"></i> Despesas
+            </button>
+        </nav>
+
+        <button onclick="location.reload()" class="mt-auto text-left text-gray-500 hover:text-white text-sm">
+            <i class="fas fa-sign-out-alt mr-2"></i> Sair
+        </button>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8">
+        <section id="sec-dash" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="kpi-container">
+                </div>
+            <div class="glass-card p-6 h-80">
+                <canvas id="chartFlavors"></canvas>
+            </div>
+        </section>
+
+        <section id="sec-orders" class="hidden space-y-4">
+            <h2 class="text-2xl font-bold">Gerenciar Pedidos</h2>
+            <div class="glass-card overflow-hidden">
+                <table class="w-full text-left">
+                    <tbody id="rankingTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="sec-inventory" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Produtos em Estoque</h2>
+                <button onclick="abrirModalAddPizza()" class="bg-blue-600 px-4 py-2 rounded-lg font-bold">+ Novo Sabor</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="inventoryContainer">
+                </div>
+        </section>
+    </main>
+</div>
+
+        <main class="flex-1 overflow-y-auto p-8 no-scrollbar">
+            
+            <header class="flex justify-between items-center mb-10">
+                <div>
+                    <h2 class="text-4xl font-black tracking-tighter">Performance</h2>
+                    <p class="text-gray-400 text-sm">Dados atualizados em tempo real.</p>
+                </div>
+                <div class="flex gap-4">
+                    <a href="index.html" target="_blank" class="bg-white/5 text-white border border-white/10 px-4 py-3 rounded-xl hover:bg-white/10 transition flex items-center gap-2" title="Ver como o cliente vê">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <button onclick="gerarRelatorio()" class="bg-emerald-600/20 text-emerald-400 border border-emerald-600/30 px-6 py-3 rounded-xl font-bold text-xs hover:bg-emerald-600 transition flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i> BALANÇO PDF
+                    </button>
+                </div>
+            </header>
+
+            <div id="dashboardSection">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                    <div class="glass-card p-6 border-l-4 border-emerald-500">
+                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest">Receita Bruta</p>
+                        <h3 class="text-3xl font-black" id="receitaBruta">R$ 0,00</h3>
+                    </div>
+                    <div class="glass-card p-6 border-l-4 border-red-500">
+                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest">Gastos Totais</p>
+                        <h3 class="text-3xl font-black" id="gastosTotais">R$ 0,00</h3>
+                    </div>
+                    <div class="glass-card p-6 border-l-4 border-blue-500">
+                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest">Lucro Líquido</p>
+                        <h3 class="text-3xl font-black text-blue-400" id="lucroLiquido">R$ 0,00</h3>
+                    </div>
+                    <div class="glass-card p-6 border-l-4 border-yellow-500">
+                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest">Pizzas Vendidas</p>
+                        <h3 class="text-3xl font-black" id="totalVendas">0</h3>
+                    </div>
+                </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-[#111827] p-6 rounded-2xl border border-white/5 h-[450px] flex flex-col">
+        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-chart-pie text-blue-400"></i> VENDAS POR SABOR
+        </h3>
+        <div class="flex-1 relative">
+            <canvas id="chartFlavors"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-[#111827] p-6 rounded-2xl border border-white/5 h-[450px] flex flex-col">
+        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-trophy text-yellow-400"></i> TOP DESBRAVADORES
+        </h3>
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <table class="w-full">
+                <tbody id="rankingTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+            <section id="inventorySection" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black">Gerenciar Cardápio</h3>
+                    <button onclick="abrirModalAddPizza()" class="bg-blue-600 px-6 py-2 rounded-xl font-bold text-sm">+ Nova Pizza</button>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-white/5 text-[10px] font-black uppercase">
+                            <tr>
+                                <th class="p-6">Imagem</th>
+                                <th class="p-6">Sabor</th>
+                                <th class="p-6">Preço</th>
+                                <th class="p-6">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modalPizza" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[110] backdrop-blur-md">
+        <div class="glass-card p-8 w-full max-w-md bg-[#161b22] border-blue-500/30">
+            <h2 id="pizzaModalTitle" class="text-2xl font-black mb-6">Novo Sabor</h2>
+            <div class="space-y-4">
+                <input type="text" id="pName" placeholder="Nome da Pizza" class="w-full p-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:ring-2 ring-blue-500">
+                <input type="number" id="pPrice" placeholder="Preço (R$)" class="w-full p-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:ring-2 ring-blue-500">
+                
+                <div id="dropZone" onclick="document.getElementById('pizzaFile').click()" class="border-2 border-dashed border-white/10 p-8 text-center rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-blue-500/5 transition">
+                    <i class="fas fa-cloud-upload-alt text-3xl mb-2 text-gray-500"></i>
+                    <p class="text-xs text-gray-400">Upload de Foto Real</p>
+                    <input type="file" id="pizzaFile" class="hidden" accept="image/*">
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button onclick="salvarPizza()" class="flex-1 bg-blue-600 p-4 rounded-xl font-black">SALVAR</button>
+                    <button onclick="fecharModal()" class="flex-1 bg-white/5 p-4 rounded-xl font-black text-gray-400">CANCELAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
