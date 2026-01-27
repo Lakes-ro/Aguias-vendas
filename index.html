@@ -1,185 +1,135 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fadminas Marketplace | Pro PWA</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Camp | Rumo a São Paulo</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-[#0f172a] text-white selection:bg-blue-500/30 font-sans antialiased">
+<body class="bg-gray-50 text-gray-900">
 
-    <div id="modalOverlay" class="fixed inset-0 bg-black/80 hidden z-40 backdrop-blur-sm transition-all"></div>
-
-    <header class="fixed top-0 w-full bg-[#1e293b]/90 backdrop-blur-md border-b border-slate-700 h-16 flex items-center justify-between px-6 z-30">
-        <div class="flex items-center gap-4">
-            <button id="toggleSidebar" class="lg:hidden text-xl p-2 hover:bg-slate-700 rounded-lg transition">
-                <i class="fas fa-bars"></i>
-            </button>
-            <h1 class="text-xl font-black italic tracking-tighter text-blue-500 uppercase">Fadminas_</h1>
-        </div>
+    <header class="relative h-[60vh] flex items-center justify-center bg-blue-950 text-white overflow-hidden">
+        <div class="absolute inset-0 bg-black/50 z-10"></div>
+        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1500" class="absolute inset-0 w-full h-full object-cover">
         
-        <div class="flex items-center gap-4">
-            <button id="cartToggleHeader" class="relative p-2 hover:bg-slate-700 rounded-full transition group">
-                <i class="fas fa-shopping-basket text-xl group-hover:scale-110 transition"></i>
-                <span id="cartCountHeader" class="absolute -top-1 -right-1 bg-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg">0</span>
-            </button>
+        <div class="relative z-20 text-center px-4 max-w-3xl">
+            <span class="bg-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Campanha 2026</span>
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">Ajude o Clube a ir ao campori DSA</h1>
+            <p class="text-lg md:text-xl text-gray-200 mb-8">Cada pizza comprada é um quilômetro percorrido. Compre uma pizza deliciosa e faça parte da nossa história.</p>
+            <a href="#cardapio" class="bg-white text-blue-950 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition shadow-lg">
+                Ver Sabores & Ajudar
+            </a>
         </div>
     </header>
 
-    <div class="flex pt-16">
-        <aside id="sidebar" class="fixed left-0 h-[calc(100vh-64px)] w-64 bg-[#1e293b] border-r border-slate-700 transition-transform -translate-x-full lg:translate-x-0 z-40 overflow-y-auto">
-            <nav class="p-4 space-y-2">
-                <a href="#" class="sidebar-item active" data-section="home">
-                    <i class="fas fa-store w-8"></i> Marketplace
-                </a>
-                <a href="#" class="sidebar-item" data-section="carrinho" id="sidebarCartLink">
-                    <i class="fas fa-shopping-cart w-8"></i> Meu Carrinho
-                    <span id="sidebarCartBadge" class="ml-auto bg-blue-600 px-2 py-0.5 rounded text-[10px] font-bold">0</span>
-                </a>
-                
-                <div class="pt-6 pb-2 text-[10px] font-black text-slate-500 uppercase tracking-widest px-4">Gestão de Negócio</div>
-                <button id="openAnuncioModal" class="flex items-center gap-3 w-full p-3 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white rounded-xl font-bold transition group">
-                    <i class="fas fa-plus-circle group-hover:rotate-90 transition"></i> Criar Anúncio
-                </button>
-            </nav>
-        </aside>
-
-        <main class="flex-1 lg:ml-64 p-4 lg:p-8">
-            
-            <section id="home-section" class="page-section active">
-                <div class="bg-gradient-to-r from-blue-700 to-indigo-900 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-2xl shadow-blue-500/10">
-                    <div class="relative z-10">
-                        <span class="bg-white/20 backdrop-blur text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Ofertas da Comunidade</span>
-                        <h2 class="text-4xl lg:text-5xl font-black mt-4 leading-none">FAÇA O MELHOR<br>NEGÓCIO_</h2>
-                    </div>
-                </div>
-
-                <div class="flex gap-2 overflow-x-auto pb-6 no-scrollbar">
-                    <button class="category-btn active" data-category="all">Todos</button>
-                    <button class="category-btn" data-category="eletrônicos">Eletrônicos</button>
-                    <button class="category-btn" data-category="roupas">Roupas</button>
-                    <button class="category-btn" data-category="casa">Casa</button>
-                    <button class="category-btn" data-category="beleza">Beleza</button>
-                </div>
-
-                <div class="flex justify-between items-end mb-6">
-                    <div>
-                        <h3 class="text-2xl font-black italic uppercase">Marketplace_</h3>
-                        <p class="text-slate-500 text-sm" id="productCount">0 produtos disponíveis</p>
-                    </div>
-                </div>
-
-                <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"></div>
-            </section>
-
-            <section id="carrinho-section" class="page-section hidden">
-                <h2 class="text-3xl font-black mb-8 italic">MEU CARRINHO_</h2>
-                <div id="carrinhoPageItems" class="space-y-4 max-w-4xl">
-                    </div>
-            </section>
-        </main>
-    </div>
-
-    <div id="anuncioModal" class="fixed inset-0 flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-[#1e293b] w-full max-w-xl rounded-3xl shadow-2xl border border-slate-700 overflow-hidden">
-            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
-                <h3 class="text-xl font-black uppercase italic">Novo Anúncio_</h3>
-                <button id="closeAnuncioModal" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+    <section class="py-12 px-6 bg-white text-center">
+        <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+            <div class="p-4">
+                <i class="fas fa-church text-4xl text-blue-950 mb-4"></i>
+                <h3 class="font-bold text-xl">O Evento</h3>
+                <p class="text-gray-600 text-sm mt-2">Um encontro espiritual histórico em SP que transformará a vida dos nossos jovens.</p>
             </div>
-            <form id="anuncioForm" class="p-6 space-y-4">
-                <input type="text" id="produtoNome" placeholder="Nome do Produto" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 outline-none focus:border-blue-500 transition">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="produtoPreco" placeholder="Preço (R$)" step="0.01" required class="bg-slate-800 border border-slate-700 rounded-xl p-4 outline-none focus:border-blue-500 transition">
-                    <input type="number" id="produtoEstoque" placeholder="Estoque" required class="bg-slate-800 border border-slate-700 rounded-xl p-4 outline-none focus:border-blue-500 transition">
-                </div>
-                <select id="produtoCategoria" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 outline-none focus:border-blue-500 transition">
-                    <option value="eletrônicos">Eletrônicos</option>
-                    <option value="roupas">Roupas</option>
-                    <option value="casa">Casa</option>
-                    <option value="beleza">Beleza</option>
-                </select>
-                <textarea id="produtoDescricao" placeholder="Descrição do produto..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 h-24 outline-none focus:border-blue-500 transition"></textarea>
-                
-                <div id="fotoDropzone" class="border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center hover:border-blue-500 transition cursor-pointer bg-slate-800/30">
-                    <i class="fas fa-camera text-2xl text-slate-500 mb-2"></i>
-                    <p class="text-xs text-slate-400">Arraste a foto ou clique para selecionar</p>
-                    <input type="file" id="fotoProduto" class="hidden" accept="image/*">
-                </div>
-                <div id="fotoPreview" class="hidden flex justify-center">
-                    <img id="previewImg" src="" class="w-24 h-24 object-cover rounded-xl border-2 border-blue-500">
-                </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-600/20 transition uppercase tracking-widest">
-                    Publicar Agora
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <div id="checkoutModal" class="fixed inset-0 flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-[#1e293b] w-full max-w-md rounded-3xl shadow-2xl border border-slate-700 p-8 text-center">
-            <div class="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
-                <i class="fas fa-file-invoice-dollar"></i>
+            <div class="p-4">
+                <i class="fas fa-users text-4xl text-blue-950 mb-4"></i>
+                <h3 class="font-bold text-xl">O Clube</h3>
+                <p class="text-gray-600 text-sm mt-2">Formamos líderes e cidadãos através da disciplina, fé e serviço à comunidade.</p>
             </div>
-            <h3 class="text-2xl font-black mb-2 uppercase">Confirmar Pedido_</h3>
-            <div id="checkoutSummary" class="text-slate-400 text-sm mb-6 space-y-2 py-4 border-y border-slate-700">
-                </div>
-            <div class="flex justify-between items-center mb-8">
-                <span class="font-bold">Total a Pagar:</span>
-                <span id="checkoutTotal" class="text-2xl font-black text-green-400">R$ 0,00</span>
-            </div>
-            <div class="flex gap-3">
-                <button id="closeCheckoutBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-bold transition">CANCELAR</button>
-                <button id="confirmPaymentBtn" class="flex-1 bg-green-600 hover:bg-green-700 py-4 rounded-2xl font-bold transition">PAGAR AGORA</button>
+            <div class="p-4">
+                <i class="fas fa-bullseye text-4xl text-red-600 mb-4"></i>
+                <h3 class="font-bold text-xl">A Meta</h3>
+                <p class="text-gray-600 text-sm mt-2">Precisamos vender 500 pizzas para custear o ônibus e a alimentação.</p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div id="cartSidebar" class="fixed right-0 top-0 h-full w-full max-w-md bg-[#1e293b] shadow-2xl z-50 transition-transform translate-x-full border-l border-slate-700 flex flex-col">
-        <div class="p-6 flex justify-between items-center border-b border-slate-700">
-            <h2 class="text-xl font-black italic">CARRINHO_</h2>
-            <button id="closeCart" class="text-slate-400 hover:text-white text-2xl p-2">&times;</button>
+    <main id="cardapio" class="max-w-6xl mx-auto py-16 px-4">
+        <h2 class="text-3xl font-bold text-center text-blue-950 mb-2">Nossas Pizzas</h2>
+        <p class="text-center text-gray-500 mb-12">Feitas com amor pelas mães e diretoria do clube.</p>
+        
+        <div id="pizzasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+            </div>
+    </main>
+
+    <button onclick="toggleCart()" class="fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-2xl z-50 flex items-center gap-3 hover:scale-105 transition">
+        <i class="fas fa-shopping-basket text-xl"></i>
+        <span class="font-bold" id="floatingTotal">R$ 0,00</span>
+    </button>
+
+    <div id="cartSidebar" class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-[60] flex flex-col">
+        <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
+            <h3 class="text-xl font-bold">Seu Pedido</h3>
+            <button onclick="toggleCart()" class="text-2xl">&times;</button>            
         </div>
         
         <div id="cartItems" class="flex-1 overflow-y-auto p-6 space-y-4">
             </div>
 
-        <div class="p-6 bg-slate-800/50 border-t border-slate-700 space-y-4">
-            <div class="space-y-2">
-                <div class="flex justify-between text-slate-400"><span>Subtotal</span> <span id="subtotal">R$ 0,00</span></div>
-                <div class="flex justify-between text-slate-400"><span>Frete</span> <span id="frete">R$ 0,00</span></div>
-                <div class="flex justify-between text-2xl font-black text-white pt-2">
-                    <span>Total</span> <span id="total" class="text-blue-400">R$ 0,00</span>
-                </div>
+        <div class="p-6 border-t bg-gray-50">
+            <div class="flex justify-between mb-4 font-bold text-xl text-blue-950">
+                <span>Total:</span>
+                <span id="totalValue">R$ 0,00</span>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <button id="clearCartBtn" class="bg-slate-700 py-4 rounded-2xl font-bold text-xs hover:bg-red-600/20 hover:text-red-500 transition">LIMPAR</button>
-                <button id="checkoutBtn" class="bg-blue-600 py-4 rounded-2xl font-black text-xs hover:bg-blue-700 transition tracking-widest">FINALIZAR</button>
+           <button onclick="validarEFinalizar()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition">
+    Finalizar Pedido
+</button>
+        </div>
+    </div>
+
+    <div id="modalIdentificacao" class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
+                <h2 class="text-xl font-bold italic">Quem está pedindo?</h2>
+                <button onclick="fecharModalIdentificacao()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Seu Nome Completo</label>
+                    <input type="text" id="custName" placeholder="Ex: Lucas Silva" class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                    
+                    <label class="text-xs font-bold text-gray-500 uppercase">WhatsApp (Com DDD)</label>
+                    <input type="tel" id="custPhone" placeholder="(00) 90000-0000" class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Observações</label>
+                    <textarea id="custNotes" rows="2" class="w-full p-4 border rounded-xl mt-1 outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="Ex: Sem cebola, borda recheada..."></textarea>
+                </div>
+
+                <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                    <p class="text-green-800 font-bold text-center mb-3">PAGAMENTO VIA PIX</p>
+                    <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-green-100">
+                        <code class="font-mono text-sm text-green-700">35991264352</code>
+                        <button onclick="copyPix()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition">Copiar</button>
+                    </div>
+                </div>
+
+               <button onclick="enviarPedido()" class="bg-blue-600 text-white w-full py-4 rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all">
+                Confirmar Pedido
+               </button>
             </div>
         </div>
     </div>
 
-    <div class="lg:hidden fixed bottom-0 w-full bg-[#1e293b]/90 backdrop-blur-md border-t border-slate-700 flex justify-around p-4 z-20">
-        <button class="text-blue-500 text-xl p-2" onclick="showSection('home')"><i class="fas fa-home"></i></button>
-        <button class="text-slate-400 text-xl p-2" id="openAnuncioModalFromSection"><i class="fas fa-plus-circle"></i></button>
-        <button class="text-slate-400 text-xl p-2" onclick="showSection('carrinho')"><i class="fas fa-shopping-basket"></i></button>
-    </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+    <script src="client.js"></script>
     <script>
-        // Registro do Service Worker para PWA (Só funciona em HTTPS)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail', err));
-            });
+        // Funções para controlar o Modal (Pop-up)
+        function abrirModalIdentificacao() {
+            document.getElementById('modalIdentificacao').classList.remove('hidden');
+        }
+
+        function fecharModalIdentificacao() {
+            document.getElementById('modalIdentificacao').classList.add('hidden');
+        }
+
+        function copyPix() {
+            const pixKey = "35991264352";
+            navigator.clipboard.writeText(pixKey);
+            alert("Chave PIX copiada!");
         }
     </script>
 </body>
