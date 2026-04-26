@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Camp | Rumo ao Campori DSA</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- ============================== HERO ============================== -->
+    <header class="relative h-[60vh] flex items-center justify-center bg-blue-950 text-white overflow-hidden">
+        <div class="absolute inset-0 bg-black/50 z-10"></div>
+        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1500"
+             class="absolute inset-0 w-full h-full object-cover" alt="Pizza">
+
+        <div class="relative z-20 text-center px-4 max-w-3xl">
+            <span class="bg-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Campanha 2026</span>
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">Ajude o Clube a ir ao Campori DSA</h1>
+            <p class="text-lg md:text-xl text-gray-200 mb-8">
+                Cada pizza comprada é um quilômetro percorrido. Compre e faça parte da nossa história.
+            </p>
+            <a href="#cardapio" class="bg-white text-blue-950 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition shadow-lg">
+                Ver Sabores & Ajudar
+            </a>
+        </div>
+    </header>
+
+    <!-- ============================== INFO ============================== -->
+    <section class="py-12 px-6 bg-white text-center">
+        <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+            <div class="p-4">
+                <i class="fas fa-church text-4xl text-blue-950 mb-4"></i>
+                <h3 class="font-bold text-xl">O Evento</h3>
+                <p class="text-gray-600 text-sm mt-2">Um encontro espiritual histórico em SP que transformará a vida dos nossos jovens.</p>
+            </div>
+            <div class="p-4">
+                <i class="fas fa-users text-4xl text-blue-950 mb-4"></i>
+                <h3 class="font-bold text-xl">O Clube</h3>
+                <p class="text-gray-600 text-sm mt-2">Formamos líderes e cidadãos através da disciplina, fé e serviço à comunidade.</p>
+            </div>
+            <div class="p-4">
+                <i class="fas fa-bullseye text-4xl text-red-600 mb-4"></i>
+                <h3 class="font-bold text-xl">A Meta</h3>
+                <p class="text-gray-600 text-sm mt-2">Precisamos vender 500 pizzas para custear o ônibus e a alimentação.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== CARDÁPIO ============================== -->
+    <main id="cardapio" class="max-w-6xl mx-auto py-16 px-4">
+        <h2 class="text-3xl font-bold text-center text-blue-950 mb-2">Nossas Pizzas</h2>
+        <p class="text-center text-gray-500 mb-12">Feitas com amor pelas mães e diretoria do clube.</p>
+
+        <div id="pizzasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-16 text-gray-400">
+                <i class="fas fa-spinner fa-spin text-4xl mb-4 block"></i>
+                Carregando sabores...
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================== BOTÃO FLUTUANTE CARRINHO ============================== -->
+    <button onclick="toggleCart()"
+            class="fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-2xl z-50 flex items-center gap-3 hover:scale-105 transition hover:bg-green-700">
+        <i class="fas fa-shopping-basket text-xl"></i>
+        <span class="font-bold" id="floatingTotal">R$ 0,00</span>
+    </button>
+
+    <!-- ============================== SIDEBAR CARRINHO ============================== -->
+    <div id="cartSidebar"
+         class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-[60] flex flex-col">
+
+        <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
+            <h3 class="text-xl font-bold"><i class="fas fa-shopping-basket mr-2"></i>Seu Pedido</h3>
+            <button onclick="toggleCart()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+        </div>
+
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6"></div>
+
+        <div class="p-6 border-t bg-gray-50">
+            <div class="flex justify-between mb-4 font-bold text-xl text-blue-950">
+                <span>Total:</span>
+                <span id="totalValue">R$ 0,00</span>
+            </div>
+            <button onclick="validarEFinalizar()"
+                    class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition">
+                Finalizar Pedido
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================== MODAL IDENTIFICAÇÃO ============================== -->
+    <div id="modalIdentificacao"
+         class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4 backdrop-blur-sm flex">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden modal-inner">
+
+            <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
+                <h2 class="text-xl font-bold">Quem está pedindo?</h2>
+                <button onclick="fecharModalIdentificacao()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4">
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Nome Completo</label>
+                        <input type="text" id="custName" placeholder="Ex: Lucas Silva"
+                               class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase block mb-1">WhatsApp (Com DDD)</label>
+                        <input type="tel" id="custPhone" placeholder="(00) 90000-0000"
+                               class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Observações</label>
+                        <textarea id="custNotes" rows="2" placeholder="Ex: Sem cebola, borda recheada..."
+                                  class="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"></textarea>
+                    </div>
+                </div>
+
+                <!-- PIX -->
+                <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                    <p class="text-green-800 font-bold text-center mb-3">💚 PAGAMENTO VIA PIX</p>
+                    <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-green-100">
+                        <code class="font-mono text-sm text-green-700">35991264352</code>
+                        <button onclick="copyPix()"
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition">
+                            Copiar
+                        </button>
+                    </div>
+                    <p class="text-xs text-green-700 text-center mt-2">Envie o comprovante pelo WhatsApp após o pedido.</p>
+                </div>
+
+                <button onclick="enviarPedido()"
+                        class="bg-blue-600 text-white w-full py-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all">
+                    Confirmar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+</html>
