@@ -389,4 +389,44 @@ async function gerarRelatorio() {
             <td style="font-weight:600;white-space:nowrap">${p.cliente_nome||'—'}</td>
             <td style="color:#9ca3af;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.itens||'—'}</td>
             <td style="color:#34d399;font-weight:800;white-space:nowrap">${brl(p.total||0)}</td>
-            <td><span class
+            <td><span class="badge ${p.status==='Pago'?'badge-pago':'badge-pendente'}">${(p.status||'Pendente').toUpperCase()}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+// ─────────────────────────────────────────
+// 11. NAVEGAÇÃO
+// ─────────────────────────────────────────
+const SECTIONS = ['dash','relatorio','orders','inventory'];
+
+function showSection(id) {
+    SECTIONS.forEach(s => {
+        document.getElementById(`sec-${s}`)?.classList.remove('active');
+        document.getElementById(`btn-${s}`)?.classList.remove('active');
+        document.getElementById(`bnav-${s}`)?.classList.remove('active');
+    });
+    document.getElementById(`sec-${id}`)?.classList.add('active');
+    document.getElementById(`btn-${id}`)?.classList.add('active');
+    document.getElementById(`bnav-${id}`)?.classList.add('active');
+    const main = document.getElementById('main-content');
+    if (main) main.scrollTop = 0;
+}
+
+// ─────────────────────────────────────────
+// 12. REALTIME
+// ─────────────────────────────────────────
+function iniciarRealtime() {
+    _supabase.channel('realtime-admin')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, async (payload) => {
+            if (payload.eventType === 'INSERT') playNotificationSound();
+            await carregarDados();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pizzas' }, async () => {
+            await carregarDados();
+        })
+        .subscribe();
+}
+
+function playNotificationSound() {
+    try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch(e) {}
+}
