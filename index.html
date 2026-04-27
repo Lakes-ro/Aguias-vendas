@@ -2,463 +2,259 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Admin | AGUIAS DE CRISTO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Camp | Aguias de Cristo</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pizza Camp">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ── RESET ── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --bg:      #0a0e17;
-            --bg2:     #060911;
-            --glass:   rgba(255,255,255,0.05);
-            --border:  rgba(255,255,255,0.08);
-            --blue:    #3b82f6;
-            --green:   #10b981;
-            --nav-h:   64px;
-        }
-
-        html { height: 100%; }
-
-        body {
+        /* ── BOTÃO ADMIN FIXO ── */
+        #btn-go-admin {
+            position: fixed; top: .875rem; right: .875rem; z-index: 200;
+            background: rgba(30,58,138,.85); backdrop-filter: blur(8px);
+            color: white; border: 1px solid rgba(255,255,255,.2); border-radius: 10px;
+            padding: 7px 13px; font-size: 11px; font-weight: 800;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            text-decoration: none; letter-spacing: .03em; transition: background .2s;
             font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: white;
-            height: 100%;
-            -webkit-tap-highlight-color: transparent;
         }
+        #btn-go-admin:hover { background: rgba(37,99,235,.9); }
 
-        /* ── SCROLLBAR ── */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+        /* ── BANNERS PWA ── */
+        .pwa-banner {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+            transform: translateY(110%); transition: transform .4s cubic-bezier(.4,0,.2,1);
+            pointer-events: none;
+        }
+        .pwa-banner.visible { transform: translateY(0); pointer-events: all; }
 
-        /* ── GLASS ── */
-        .glass {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 1.25rem;
-            backdrop-filter: blur(12px);
+        .pwa-card {
+            margin: 0 .75rem .75rem;
+            background: white; border-radius: 1.25rem;
+            box-shadow: 0 -4px 40px rgba(0,0,0,.15);
+            border: 2px solid #1e3a8a; overflow: hidden;
         }
-
-        /* ══════════════════════════════════════
-           LAYOUT RAIZ
-        ══════════════════════════════════════ */
-        #mainDashboard {
-            display: flex;
-            width: 100%;
-            height: 100dvh;
-            opacity: 0;
-            transition: opacity .5s ease;
+        .pwa-topbar {
+            background: linear-gradient(135deg,#1e3a8a,#2563eb);
+            padding: .45rem 1rem; display: flex; align-items: center; gap: .4rem;
         }
-
-        /* ══════════════════════════════════════
-           SIDEBAR — visível só em desktop
-        ══════════════════════════════════════ */
-        #sidebar {
-            width: 220px;
-            min-width: 220px;
-            background: var(--bg2);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem 1rem;
-            gap: .375rem;
-            overflow-y: auto;
+        .pwa-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.35); }
+        .pwa-body { padding: 1.1rem 1.25rem; }
+        .pwa-icon {
+            width: 54px; height: 54px; border-radius: 13px;
+            background: #1e3a8a; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0; overflow: hidden;
         }
-
-        .snav-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 11px 14px;
-            border-radius: 12px;
-            border: none;
-            background: transparent;
-            color: #6b7280;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            text-align: left;
-            transition: all .2s;
-            text-decoration: none;
+        .pwa-icon img { width:100%; height:100%; object-fit:cover; }
+        .pwa-btn-install {
+            background: linear-gradient(135deg,#1e3a8a,#2563eb);
+            color: white; border: none; border-radius: 11px;
+            padding: .75rem 1.25rem; font-weight: 900; font-size: 14px;
+            cursor: pointer; width: 100%; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
         }
-        .snav-btn:hover  { background: rgba(255,255,255,0.05); color: white; }
-        .snav-btn.active { background: rgba(59,130,246,.12); color: var(--blue); border-right: 3px solid var(--blue); }
-        .snav-btn.store  { color: var(--green); border: 1px solid rgba(16,185,129,.2); }
-        .snav-btn.store:hover { background: rgba(16,185,129,.08); }
-
-        /* ══════════════════════════════════════
-           CONTEÚDO PRINCIPAL
-        ══════════════════════════════════════ */
-        #main-content {
-            flex: 1;
-            min-width: 0;          /* CRÍTICO: evita overflow horizontal */
-            overflow-y: auto;
-            padding: 2rem;
+        .pwa-btn-close {
+            background: #f3f4f6; color: #6b7280; border: none;
+            border-radius: 11px; padding: .75rem 1rem;
+            font-weight: 700; font-size: 13px; cursor: pointer;
+            font-family: inherit; white-space: nowrap;
         }
-
-        /* ══════════════════════════════════════
-           SEÇÕES
-        ══════════════════════════════════════ */
-        .section { display: none; }
-        .section.active { display: block; animation: fadeUp .25s ease; }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .ios-card {
+            margin: 0 .75rem .75rem; background: white;
+            border-radius: 1.25rem; padding: 1.25rem;
+            box-shadow: 0 -4px 40px rgba(0,0,0,.15); border: 2px solid #1e3a8a;
         }
-
-        /* ══════════════════════════════════════
-           KPI CARDS
-        ══════════════════════════════════════ */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: .75rem;
-            margin-bottom: 1.25rem;
-        }
-        .kpi-card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1rem 1.1rem;
-            min-width: 0;
-        }
-        .kpi-label { font-size: 9px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
-        .kpi-value { font-size: 1.4rem; font-weight: 900; margin-top: .2rem; line-height: 1.2; word-break: break-word; }
-        .kpi-sub   { font-size: 9px; color: #4b5563; margin-top: .2rem; }
-
-        /* ══════════════════════════════════════
-           CARDS GENÉRICOS
-        ══════════════════════════════════════ */
-        .item-card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1rem 1.1rem;
-            margin-bottom: .75rem;
-        }
-
-        /* ══════════════════════════════════════
-           BADGES
-        ══════════════════════════════════════ */
-        .badge {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 99px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-        }
-        .badge-pago     { background: rgba(16,185,129,.15); color: #34d399; }
-        .badge-pendente { background: rgba(234,179,8,.15);  color: #facc15; }
-
-        /* ══════════════════════════════════════
-           BOTTOM NAV — só no mobile
-        ══════════════════════════════════════ */
-        #bottom-nav {
-            display: none;
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: var(--nav-h);
-            background: rgba(6,9,17,.97);
-            border-top: 1px solid var(--border);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 90;
-            /* Safe area iPhone */
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-        }
-
-        /* Contêiner dos botões preenche 100% da largura */
-        #bottom-nav .bnav-inner {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Cada botão ocupa 1 fração igual */
-        .bnav-btn {
-            flex: 1 1 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 3px;
-            color: #6b7280;
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            padding: 4px 2px;
-            transition: color .2s, background .2s;
-            text-decoration: none;
-            /* Sem largura mínima — deixa o flex distribuir igual */
-            min-width: 0;
-        }
-        .bnav-btn i { font-size: 18px; display: block; }
-        .bnav-btn span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; padding: 0 4px; }
-        .bnav-btn.active { color: var(--blue); background: rgba(59,130,246,.08); }
-        .bnav-btn.store-btn  { color: var(--green); }
-        .bnav-btn.logout-btn { color: #9ca3af; }
-
-        /* ══════════════════════════════════════
-           MODAL
-        ══════════════════════════════════════ */
-        .modal-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.82);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 110;
-            padding: 1rem;
-        }
-        .modal-box {
-            background: #111827;
-            border: 1px solid rgba(59,130,246,.25);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            width: 100%;
-            max-width: 420px;
-        }
-        .modal-input {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 12px;
-            background: rgba(255,255,255,.05);
-            border: 1px solid rgba(255,255,255,.1);
-            color: white;
-            font-size: 15px;
-            outline: none;
-            transition: border .2s;
-            font-family: inherit;
-            margin-bottom: .875rem;
-        }
-        .modal-input:focus { border-color: var(--blue); }
-        .modal-input::placeholder { color: #4b5563; }
-
-        /* ══════════════════════════════════════
-           RESPONSIVO MOBILE ≤ 767px
-        ══════════════════════════════════════ */
-        @media (max-width: 767px) {
-            #sidebar { display: none; }
-            #bottom-nav { display: flex; }
-
-            /* Impede scroll no body, isola no #main-content */
-            body { overflow: hidden; }
-            #mainDashboard { overflow: hidden; }
-            #main-content {
-                padding: 1rem .875rem;
-                /* Espaço para a bottom nav */
-                padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + .75rem);
-                height: 100dvh;
-                overflow-y: auto;
-            }
-
-            .kpi-value { font-size: 1.25rem; }
-        }
-
-        /* Desktop: 4 colunas para KPIs */
-        @media (min-width: 768px) {
-            .kpi-grid { grid-template-columns: repeat(4, 1fr); }
-        }
+        .ios-arrow { text-align:center; font-size:26px; animation: bounce .8s infinite alternate; }
+        @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(6px)} }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-900" style="font-family:'Inter',sans-serif">
 
-<!-- ════════════ LOGIN ════════════ -->
-<div id="loginOverlay"
-     style="position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:#060911">
-    <div class="glass" style="width:100%;max-width:320px;padding:2.5rem;text-align:center;border-color:rgba(59,130,246,.3)">
-        <div style="width:64px;height:64px;border-radius:50%;background:rgba(59,130,246,.15);
-                    box-shadow:0 0 28px rgba(59,130,246,.4);display:flex;align-items:center;
-                    justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;color:#60a5fa">
-            <i class="fas fa-user-shield"></i>
+    <!-- BOTÃO ADMIN -->
+    <a href="admin.html" id="btn-go-admin">
+        <i class="fas fa-lock" style="font-size:10px"></i> Admin
+    </a>
+
+    <!-- HERO -->
+    <header class="relative flex items-center justify-center bg-blue-950 text-white overflow-hidden" style="min-height:60vh">
+        <div class="absolute inset-0 bg-black/50 z-10"></div>
+        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1500"
+             class="absolute inset-0 w-full h-full object-cover" alt="Pizza" loading="eager">
+        <div class="relative z-20 text-center px-4 max-w-3xl py-20">
+            <span class="bg-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Campanha 2026</span>
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">Ajude o Clube a ir ao Campori DSA</h1>
+            <p class="text-lg md:text-xl text-gray-200 mb-8">Cada pizza comprada é um quilômetro percorrido. Compre e faça parte da nossa história.</p>
+            <a href="#cardapio" class="bg-white text-blue-950 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition shadow-lg">
+                Ver Sabores & Ajudar
+            </a>
         </div>
-        <h2 style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.25rem">ÁREA RESTRITA</h2>
-        <p style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.75rem">Diretoria do Clube</p>
-        <form id="loginForm" style="display:flex;flex-direction:column;gap:.75rem">
-            <input type="password" id="adminPass" placeholder="Senha mestra"
-                   class="modal-input" style="text-align:center;font-size:1.1rem;letter-spacing:.15em;margin-bottom:0">
-            <button type="submit"
-                    style="width:100%;padding:1rem;border-radius:12px;background:#2563eb;color:white;
-                           font-weight:900;font-size:.8rem;letter-spacing:.1em;border:none;cursor:pointer;
-                           transition:background .2s"
-                    onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
-                ENTRAR
-            </button>
-        </form>
-        <p id="loginError" style="color:#f87171;font-size:11px;font-weight:700;margin-top:.75rem;display:none">
-            Senha incorreta.
-        </p>
-    </div>
-</div>
+    </header>
 
-<!-- ════════════ DASHBOARD ════════════ -->
-<div id="mainDashboard">
-
-    <!-- SIDEBAR DESKTOP -->
-    <aside id="sidebar">
-        <div style="padding:.25rem .5rem;margin-bottom:1.25rem">
-            <p style="color:#3b82f6;font-weight:900;font-size:15px;letter-spacing:-.02em">🦅 CLUBE ADMIN</p>
-            <p style="font-size:10px;color:#374151;margin-top:2px">Aguias de Cristo</p>
+    <!-- INFO -->
+    <section class="py-12 px-6 bg-white text-center">
+        <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+            <div class="p-4"><i class="fas fa-church text-4xl text-blue-950 mb-4"></i><h3 class="font-bold text-xl">O Evento</h3><p class="text-gray-600 text-sm mt-2">Um encontro espiritual histórico em SP que transformará a vida dos nossos jovens.</p></div>
+            <div class="p-4"><i class="fas fa-users text-4xl text-blue-950 mb-4"></i><h3 class="font-bold text-xl">O Clube</h3><p class="text-gray-600 text-sm mt-2">Formamos líderes e cidadãos através da disciplina, fé e serviço à comunidade.</p></div>
+            <div class="p-4"><i class="fas fa-bullseye text-4xl text-red-600 mb-4"></i><h3 class="font-bold text-xl">A Meta</h3><p class="text-gray-600 text-sm mt-2">Precisamos vender 500 pizzas para custear o ônibus e a alimentação.</p></div>
         </div>
+    </section>
 
-        <button onclick="showSection('dash')"      id="btn-dash"      class="snav-btn active"><i class="fas fa-chart-line" style="width:16px"></i> Dashboard</button>
-        <button onclick="showSection('orders')"    id="btn-orders"    class="snav-btn"><i class="fas fa-shopping-basket" style="width:16px"></i> Pedidos</button>
-        <button onclick="showSection('inventory')" id="btn-inventory" class="snav-btn"><i class="fas fa-pizza-slice" style="width:16px"></i> Estoque</button>
-
-        <div style="flex:1"></div>
-
-        <a href="cliente.html" target="_blank" class="snav-btn store" style="margin-bottom:.375rem">
-            <i class="fas fa-store" style="width:16px"></i> Ver Loja
-        </a>
-        <button onclick="location.reload()" class="snav-btn">
-            <i class="fas fa-sign-out-alt" style="width:16px"></i> Sair
-        </button>
-    </aside>
-
-    <!-- CONTEÚDO -->
-    <main id="main-content">
-
-        <!-- ══ DASHBOARD ══ -->
-        <section id="sec-dash" class="section active">
-            <div style="margin-bottom:1.25rem">
-                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Performance</h2>
-                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Tempo real · Atualização automática</p>
+    <!-- CARDÁPIO -->
+    <main id="cardapio" class="max-w-6xl mx-auto py-16 px-4">
+        <h2 class="text-3xl font-bold text-center text-blue-950 mb-2">Nossas Pizzas</h2>
+        <p class="text-center text-gray-500 mb-12">Feitas com amor pelas mães e diretoria do clube.</p>
+        <div id="pizzasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-16 text-gray-400">
+                <i class="fas fa-spinner fa-spin text-4xl mb-4 block"></i>Carregando sabores...
             </div>
-
-            <!-- KPIs -->
-            <div class="kpi-grid">
-                <div class="kpi-card" style="border-left:3px solid #10b981">
-                    <p class="kpi-label">Receita Total</p>
-                    <p class="kpi-value" id="receitaBruta">R$ 0,00</p>
-                    <p class="kpi-sub">Todos os pedidos</p>
-                </div>
-                <div class="kpi-card" style="border-left:3px solid #3b82f6">
-                    <p class="kpi-label">Pedidos</p>
-                    <p class="kpi-value" id="totalPedidos">0</p>
-                    <p class="kpi-sub">Registrados</p>
-                </div>
-                <div class="kpi-card" style="border-left:3px solid #facc15">
-                    <p class="kpi-label">Pendentes</p>
-                    <p class="kpi-value" id="totalPendentes">0</p>
-                    <p class="kpi-sub">Aguardando</p>
-                </div>
-                <div class="kpi-card" style="border-left:3px solid #10b981">
-                    <p class="kpi-label">Confirmados</p>
-                    <p class="kpi-value" id="totalPagos">0</p>
-                    <p class="kpi-sub">Pagos</p>
-                </div>
-            </div>
-
-            <!-- Gráfico -->
-            <div class="glass" style="padding:1.25rem;margin-bottom:1rem">
-                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
-                    <i class="fas fa-chart-pie" style="color:#60a5fa;margin-right:.4rem"></i> Vendas por Sabor
-                </p>
-                <div style="position:relative;height:clamp(180px,35vw,240px);width:100%">
-                    <canvas id="chartFlavors"></canvas>
-                </div>
-            </div>
-
-            <!-- Últimos pedidos -->
-            <div class="glass" style="padding:1.25rem">
-                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
-                    <i class="fas fa-clock" style="color:#facc15;margin-right:.4rem"></i> Últimos Pedidos
-                </p>
-                <div id="rankingTableBody"></div>
-            </div>
-        </section>
-
-        <!-- ══ PEDIDOS ══ -->
-        <section id="sec-orders" class="section">
-            <div style="margin-bottom:1.25rem">
-                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Pedidos</h2>
-                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Confirme os pagamentos abaixo.</p>
-            </div>
-            <div id="ordersTableBody"></div>
-        </section>
-
-        <!-- ══ ESTOQUE ══ -->
-        <section id="sec-inventory" class="section">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
-                <div>
-                    <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Estoque</h2>
-                    <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Sabores e quantidades.</p>
-                </div>
-                <button onclick="abrirModal()"
-                        style="display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;border-radius:12px;
-                               background:#2563eb;color:white;font-weight:900;font-size:13px;border:none;cursor:pointer;
-                               transition:background .2s;white-space:nowrap"
-                        onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
-                    <i class="fas fa-plus"></i> Novo Sabor
-                </button>
-            </div>
-            <div id="inventoryList"></div>
-        </section>
-
+        </div>
     </main>
 
-    <!-- ════════════ BOTTOM NAV MOBILE ════════════ -->
-    <nav id="bottom-nav">
-        <div class="bnav-inner">
-            <button onclick="showSection('dash')"      id="bnav-dash"      class="bnav-btn active">
-                <i class="fas fa-chart-line"></i><span>Dashboard</span>
-            </button>
-            <button onclick="showSection('orders')"    id="bnav-orders"    class="bnav-btn">
-                <i class="fas fa-shopping-basket"></i><span>Pedidos</span>
-            </button>
-            <button onclick="showSection('inventory')" id="bnav-inventory" class="bnav-btn">
-                <i class="fas fa-pizza-slice"></i><span>Estoque</span>
-            </button>
-            <a href="index.html" target="_blank" class="bnav-btn store-btn">
-                <i class="fas fa-store"></i><span>Loja</span>
-            </a>
-            <button onclick="location.reload()" class="bnav-btn logout-btn">
-                <i class="fas fa-sign-out-alt"></i><span>Sair</span>
-            </button>
+    <!-- BOTÃO FLUTUANTE CARRINHO -->
+    <button onclick="toggleCart()"
+            class="fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-2xl z-50 flex items-center gap-3 hover:scale-105 transition hover:bg-green-700">
+        <i class="fas fa-shopping-basket text-xl"></i>
+        <span class="font-bold" id="floatingTotal">R$ 0,00</span>
+    </button>
+
+    <!-- SIDEBAR CARRINHO -->
+    <div id="cartSidebar" class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-[60] flex flex-col">
+        <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
+            <h3 class="text-xl font-bold"><i class="fas fa-shopping-basket mr-2"></i>Seu Pedido</h3>
+            <button onclick="toggleCart()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
         </div>
-    </nav>
-
-</div>
-
-<!-- ════════════ MODAL PIZZA ════════════ -->
-<div id="modalPizza" class="modal-overlay">
-    <div class="modal-box">
-        <h2 id="pizzaModalTitle" style="font-size:1.2rem;font-weight:900;margin-bottom:1.25rem">Novo Sabor</h2>
-        <input type="text"   id="pName"     placeholder="Nome da Pizza"             class="modal-input">
-        <input type="number" id="pPrice"    placeholder="Preço (R$)" step="0.01"    class="modal-input">
-        <input type="url"    id="pImageUrl" placeholder="URL da Foto (https://...)" class="modal-input">
-        <p style="font-size:11px;color:#4b5563;margin-top:-.5rem;margin-bottom:1rem">Cole o link direto de uma imagem.</p>
-        <div style="display:flex;gap:.75rem">
-            <button onclick="salvarPizza()"
-                    style="flex:1;padding:1rem;border-radius:12px;background:#2563eb;color:white;
-                           font-weight:900;font-size:13px;border:none;cursor:pointer;transition:background .2s"
-                    onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
-                SALVAR
-            </button>
-            <button onclick="fecharModal()"
-                    style="flex:1;padding:1rem;border-radius:12px;background:rgba(255,255,255,.06);
-                           color:#9ca3af;font-weight:900;font-size:13px;border:none;cursor:pointer">
-                CANCELAR
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6"></div>
+        <div class="p-6 border-t bg-gray-50">
+            <div class="flex justify-between mb-4 font-bold text-xl text-blue-950">
+                <span>Total:</span><span id="totalValue">R$ 0,00</span>
+            </div>
+            <button onclick="validarEFinalizar()"
+                    class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition">
+                Finalizar Pedido
             </button>
         </div>
     </div>
-</div>
 
-<script src="admin.js"></script>
+    <!-- MODAL IDENTIFICAÇÃO -->
+    <div id="modalIdentificacao"
+         class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4 backdrop-blur-sm flex">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden modal-inner">
+            <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
+                <h2 class="text-xl font-bold">Quem está pedindo?</h2>
+                <button onclick="fecharModalIdentificacao()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Nome Completo</label>
+                    <input type="text" id="custName" placeholder="Ex: Lucas Silva"
+                           class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase block mb-1">WhatsApp (Com DDD)</label>
+                    <input type="tel" id="custPhone" placeholder="(35) 99126-4352"
+                           class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                </div>
+                <!-- PIX -->
+                <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                    <p class="text-green-800 font-bold text-center mb-3">💚 PAGAMENTO VIA PIX</p>
+                    <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-green-100">
+                        <code class="font-mono text-sm text-green-700">35991264352</code>
+                        <button onclick="copyPix()"
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition">
+                            Copiar
+                        </button>
+                    </div>
+                    <p class="text-xs text-green-700 text-center mt-2">Envie o comprovante pelo WhatsApp após o pedido.</p>
+                </div>
+                <button onclick="enviarPedido()"
+                        class="bg-blue-600 text-white w-full py-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all">
+                    Confirmar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ BANNER PWA — Android/Chrome ══ -->
+    <div id="pwa-banner" class="pwa-banner">
+        <div class="pwa-card">
+            <div class="pwa-topbar">
+                <div class="pwa-dot"></div><div class="pwa-dot"></div><div class="pwa-dot"></div>
+                <span style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700;margin-left:auto">pizza camp</span>
+            </div>
+            <div class="pwa-body">
+                <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1rem">
+                    <div class="pwa-icon">
+                        <img src="logo.png" alt="Pizza Camp" onerror="this.parentElement.innerHTML='🍕'">
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <p style="font-weight:900;font-size:15px;color:#1e293b">Pizza Camp</p>
+                        <p style="font-size:12px;color:#64748b;margin-top:2px">Aguias de Cristo</p>
+                        <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
+                            <i class="fas fa-shield-alt" style="font-size:10px;color:#16a34a"></i>
+                            <span style="font-size:10px;color:#16a34a;font-weight:700">App gratuito e seguro</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:#eff6ff;border-radius:12px;padding:.875rem;margin-bottom:.875rem;border:1px solid #bfdbfe">
+                    <p style="font-size:13px;color:#1e40af;font-weight:700;margin-bottom:.25rem">📲 Instale o app no seu celular!</p>
+                    <p style="font-size:12px;color:#3b82f6;line-height:1.5">Acesse o cardápio direto da tela inicial — sem abrir o navegador.</p>
+                </div>
+                <div style="display:flex;gap:.625rem">
+                    <button class="pwa-btn-install" onclick="instalarApp()">
+                        <i class="fas fa-download"></i> Instalar Grátis
+                    </button>
+                    <button class="pwa-btn-close" onclick="dispensarBanner('pwa-banner')">Agora não</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ BANNER iOS ══ -->
+    <div id="ios-banner" class="pwa-banner">
+        <div class="ios-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
+                <div style="display:flex;align-items:center;gap:.75rem">
+                    <div class="pwa-icon" style="width:44px;height:44px;border-radius:10px">
+                        <img src="logo.png" alt="Pizza Camp" onerror="this.parentElement.innerHTML='🍕'">
+                    </div>
+                    <div>
+                        <p style="font-weight:900;font-size:14px;color:#1e293b">Instalar Pizza Camp</p>
+                        <p style="font-size:11px;color:#64748b">Salvar na tela inicial</p>
+                    </div>
+                </div>
+                <button onclick="dispensarBanner('ios-banner')"
+                        style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;color:#94a3b8;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+                    &times;
+                </button>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:.875rem;border:1px solid #e2e8f0">
+                <p style="font-size:13px;color:#334155;font-weight:700;margin-bottom:.625rem">Siga 2 passos simples:</p>
+                <div style="display:flex;align-items:flex-start;gap:.625rem;margin-bottom:.5rem">
+                    <span style="background:#1e3a8a;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">1</span>
+                    <p style="font-size:12px;color:#475569;line-height:1.5">Toque em <strong style="color:#1e3a8a">Compartilhar</strong> <i class="fas fa-share-from-square" style="color:#1e3a8a"></i> na barra do Safari</p>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:.625rem">
+                    <span style="background:#1e3a8a;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">2</span>
+                    <p style="font-size:12px;color:#475569;line-height:1.5">Toque em <strong style="color:#1e3a8a">"Adicionar à Tela de Início"</strong> e depois em <strong>Adicionar</strong></p>
+                </div>
+            </div>
+            <div class="ios-arrow" style="margin-top:.625rem">👇</div>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
 </body>
 </html>
