@@ -2,149 +2,467 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizza Camp | Rumo ao Campori DSA</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Admin | AGUIAS DE CRISTO</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #0a0e17;
+            --bg2:     #060911;
+            --glass:   rgba(255,255,255,0.05);
+            --border:  rgba(255,255,255,0.08);
+            --blue:    #3b82f6;
+            --green:   #10b981;
+            --nav-h:   64px;
+        }
+
+        html { height: 100%; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: white;
+            height: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+
+        .glass {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            backdrop-filter: blur(12px);
+        }
+
+        /* ── LOGIN ── usa display puro, sem Tailwind */
+        #loginOverlay {
+            position: fixed; inset: 0; z-index: 200;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1.25rem; background: #060911;
+        }
+
+        /* ── DASHBOARD ── */
+        #mainDashboard {
+            display: flex; width: 100%; height: 100dvh;
+            opacity: 0; transition: opacity .5s ease;
+        }
+
+        /* ── SIDEBAR ── */
+        #sidebar {
+            width: 220px; min-width: 220px;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            padding: 1.5rem 1rem; gap: .375rem; overflow-y: auto;
+        }
+        .snav-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 14px; border-radius: 12px;
+            border: none; background: transparent; color: #6b7280;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            width: 100%; text-align: left; transition: all .2s;
+            text-decoration: none; font-family: inherit;
+        }
+        .snav-btn:hover  { background: rgba(255,255,255,0.05); color: white; }
+        .snav-btn.active { background: rgba(59,130,246,.12); color: var(--blue); border-right: 3px solid var(--blue); }
+        .snav-btn.store  { color: var(--green); border: 1px solid rgba(16,185,129,.2); }
+        .snav-btn.store:hover { background: rgba(16,185,129,.08); }
+
+        /* ── CONTEÚDO ── */
+        #main-content { flex: 1; min-width: 0; overflow-y: auto; padding: 2rem; }
+
+        /* ── SEÇÕES ── */
+        .section { display: none; }
+        .section.active { display: block; animation: fadeUp .25s ease; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ── KPI ── */
+        .kpi-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .75rem; margin-bottom: 1.25rem; }
+        .kpi-card { background: var(--glass); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.1rem; min-width: 0; }
+        .kpi-label { font-size: 9px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+        .kpi-value { font-size: 1.4rem; font-weight: 900; margin-top: .2rem; line-height: 1.2; word-break: break-word; }
+        .kpi-sub   { font-size: 9px; color: #4b5563; margin-top: .2rem; }
+
+        /* ── CARDS GENÉRICOS ── */
+        .item-card { background: var(--glass); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.1rem; margin-bottom: .75rem; }
+
+        /* ── BADGES ── */
+        .badge { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: .04em; }
+        .badge-pago     { background: rgba(16,185,129,.15); color: #34d399; }
+        .badge-pendente { background: rgba(234,179,8,.15);  color: #facc15; }
+
+        /* ── BOTTOM NAV ── */
+        #bottom-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            height: var(--nav-h); background: rgba(6,9,17,.97);
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            z-index: 90; padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        #bottom-nav .bnav-inner { display: flex; width: 100%; height: 100%; }
+        .bnav-btn {
+            flex: 1 1 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            color: #6b7280; font-size: 9px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: .04em;
+            border: none; background: transparent; cursor: pointer;
+            padding: 4px 2px; transition: color .2s, background .2s;
+            text-decoration: none; min-width: 0; font-family: inherit;
+        }
+        .bnav-btn i { font-size: 17px; display: block; }
+        .bnav-btn span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; padding: 0 2px; }
+        .bnav-btn.active    { color: var(--blue); background: rgba(59,130,246,.08); }
+        .bnav-btn.store-btn { color: var(--green); }
+        .bnav-btn.logout-btn { color: #9ca3af; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.82);
+            backdrop-filter: blur(8px); display: none;
+            align-items: center; justify-content: center; z-index: 110; padding: 1rem;
+        }
+        .modal-box { background: #111827; border: 1px solid rgba(59,130,246,.25); border-radius: 1.5rem; padding: 2rem; width: 100%; max-width: 420px; }
+        .modal-input {
+            width: 100%; padding: 14px 16px; border-radius: 12px;
+            background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+            color: white; font-size: 15px; outline: none; transition: border .2s;
+            font-family: inherit; margin-bottom: .875rem;
+        }
+        .modal-input:focus { border-color: var(--blue); }
+        .modal-input::placeholder { color: #4b5563; }
+
+        /* ── RELATÓRIOS ── */
+        .filter-bar {
+            background: var(--glass); border: 1px solid var(--border); border-radius: 1.25rem;
+            padding: 1.25rem; margin-bottom: 1.25rem;
+            display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: .375rem; flex: 1; min-width: 130px; }
+        .filter-label { font-size: 9px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+        .filter-select, .filter-input {
+            padding: 10px 14px; border-radius: 10px;
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+            color: white; font-size: 13px; font-family: inherit; outline: none;
+        }
+        .filter-select { cursor: pointer; }
+        .filter-select:focus, .filter-input:focus { border-color: var(--blue); }
+
+        .btn-blue {
+            padding: 10px 20px; border-radius: 10px; background: var(--blue);
+            color: white; font-weight: 800; font-size: 13px; border: none;
+            cursor: pointer; font-family: inherit; transition: background .2s; white-space: nowrap;
+        }
+        .btn-blue:hover { background: #2563eb; }
+
+        .rel-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .75rem; margin-bottom: 1.25rem; }
+        .rel-card { background: var(--glass); border: 1px solid var(--border); border-radius: 1rem; padding: 1.1rem 1.25rem; min-width: 0; }
+        .rel-title { font-size: 9px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .375rem; }
+        .rel-value { font-size: 1.5rem; font-weight: 900; line-height: 1.2; word-break: break-word; }
+        .rel-sub   { font-size: 9px; color: #4b5563; margin-top: .25rem; }
+
+        .tabela-rel { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .tabela-rel th { padding: .625rem .75rem; text-align: left; font-size: 9px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+        .tabela-rel td { padding: .75rem .75rem; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+        .tabela-rel tr:last-child td { border-bottom: none; }
+        .tabela-rel tr:hover td { background: rgba(255,255,255,.025); }
+
+        /* ── RESPONSIVO ── */
+        @media (max-width: 767px) {
+            #sidebar { display: none; }
+            #bottom-nav { display: flex; }
+            body { overflow: hidden; }
+            #mainDashboard { overflow: hidden; }
+            #main-content {
+                padding: 1rem .875rem;
+                padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + .75rem);
+                height: 100dvh; overflow-y: auto;
+            }
+            .kpi-value { font-size: 1.2rem; }
+            .rel-value { font-size: 1.2rem; }
+            .filter-bar { gap: .625rem; }
+            .tabela-rel { font-size: 11px; }
+            .tabela-rel th, .tabela-rel td { padding: .5rem .5rem; }
+        }
+        @media (min-width: 768px) {
+            .kpi-grid { grid-template-columns: repeat(4,1fr); }
+            .rel-grid  { grid-template-columns: repeat(4,1fr); }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body>
 
-    <!-- ============================== HERO ============================== -->
-    <header class="relative h-[60vh] flex items-center justify-center bg-blue-950 text-white overflow-hidden">
-        <div class="absolute inset-0 bg-black/50 z-10"></div>
-        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1500"
-             class="absolute inset-0 w-full h-full object-cover" alt="Pizza">
-
-        <div class="relative z-20 text-center px-4 max-w-3xl">
-            <span class="bg-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Campanha 2026</span>
-            <h1 class="text-4xl md:text-6xl font-bold mb-4">Ajude o Clube a ir ao Campori DSA</h1>
-            <p class="text-lg md:text-xl text-gray-200 mb-8">
-                Cada pizza comprada é um quilômetro percorrido. Compre e faça parte da nossa história.
-            </p>
-            <a href="#cardapio" class="bg-white text-blue-950 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition shadow-lg">
-                Ver Sabores & Ajudar
-            </a>
+<!-- ════════════ LOGIN ════════════ -->
+<div id="loginOverlay">
+    <div class="glass" style="width:100%;max-width:320px;padding:2.5rem;text-align:center;border-color:rgba(59,130,246,.3)">
+        <div style="width:64px;height:64px;border-radius:50%;background:rgba(59,130,246,.15);
+                    box-shadow:0 0 28px rgba(59,130,246,.4);display:flex;align-items:center;
+                    justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;color:#60a5fa">
+            <i class="fas fa-user-shield"></i>
         </div>
-    </header>
+        <h2 style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.25rem">ÁREA RESTRITA</h2>
+        <p style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.75rem">Diretoria do Clube</p>
+        <form id="loginForm" style="display:flex;flex-direction:column;gap:.75rem">
+            <input type="password" id="adminPass" placeholder="Senha mestra"
+                   class="modal-input" style="text-align:center;font-size:1.1rem;letter-spacing:.15em;margin-bottom:0">
+            <button type="submit"
+                    style="width:100%;padding:1rem;border-radius:12px;background:#2563eb;color:white;
+                           font-weight:900;font-size:.8rem;letter-spacing:.1em;border:none;cursor:pointer;transition:background .2s"
+                    onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
+                ENTRAR
+            </button>
+        </form>
+        <p id="loginError" style="color:#f87171;font-size:11px;font-weight:700;margin-top:.75rem;display:none">
+            Senha incorreta. Tente novamente.
+        </p>
+    </div>
+</div>
 
-    <!-- ============================== INFO ============================== -->
-    <section class="py-12 px-6 bg-white text-center">
-        <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
-            <div class="p-4">
-                <i class="fas fa-church text-4xl text-blue-950 mb-4"></i>
-                <h3 class="font-bold text-xl">O Evento</h3>
-                <p class="text-gray-600 text-sm mt-2">Um encontro espiritual histórico em SP que transformará a vida dos nossos jovens.</p>
-            </div>
-            <div class="p-4">
-                <i class="fas fa-users text-4xl text-blue-950 mb-4"></i>
-                <h3 class="font-bold text-xl">O Clube</h3>
-                <p class="text-gray-600 text-sm mt-2">Formamos líderes e cidadãos através da disciplina, fé e serviço à comunidade.</p>
-            </div>
-            <div class="p-4">
-                <i class="fas fa-bullseye text-4xl text-red-600 mb-4"></i>
-                <h3 class="font-bold text-xl">A Meta</h3>
-                <p class="text-gray-600 text-sm mt-2">Precisamos vender 500 pizzas para custear o ônibus e a alimentação.</p>
-            </div>
+<!-- ════════════ DASHBOARD ════════════ -->
+<div id="mainDashboard">
+
+    <!-- SIDEBAR DESKTOP -->
+    <aside id="sidebar">
+        <div style="padding:.25rem .5rem;margin-bottom:1.25rem">
+            <p style="color:#3b82f6;font-weight:900;font-size:15px;letter-spacing:-.02em">🦅 CLUBE ADMIN</p>
+            <p style="font-size:10px;color:#374151;margin-top:2px">Aguias de Cristo</p>
         </div>
-    </section>
 
-    <!-- ============================== CARDÁPIO ============================== -->
-    <main id="cardapio" class="max-w-6xl mx-auto py-16 px-4">
-        <h2 class="text-3xl font-bold text-center text-blue-950 mb-2">Nossas Pizzas</h2>
-        <p class="text-center text-gray-500 mb-12">Feitas com amor pelas mães e diretoria do clube.</p>
+        <button onclick="showSection('dash')"      id="btn-dash"      class="snav-btn active"><i class="fas fa-chart-line"            style="width:16px"></i> Dashboard</button>
+        <button onclick="showSection('relatorio')" id="btn-relatorio" class="snav-btn"><i class="fas fa-file-invoice-dollar"           style="width:16px"></i> Relatórios</button>
+        <button onclick="showSection('orders')"    id="btn-orders"    class="snav-btn"><i class="fas fa-shopping-basket"              style="width:16px"></i> Pedidos</button>
+        <button onclick="showSection('inventory')" id="btn-inventory" class="snav-btn"><i class="fas fa-pizza-slice"                  style="width:16px"></i> Estoque</button>
 
-        <div id="pizzasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="col-span-full text-center py-16 text-gray-400">
-                <i class="fas fa-spinner fa-spin text-4xl mb-4 block"></i>
-                Carregando sabores...
+        <div style="flex:1"></div>
+
+        <a href="index.html" target="_blank" class="snav-btn store" style="margin-bottom:.375rem">
+            <i class="fas fa-store" style="width:16px"></i> Ver Loja
+        </a>
+        <button onclick="location.reload()" class="snav-btn" style="font-family:inherit">
+            <i class="fas fa-sign-out-alt" style="width:16px"></i> Sair
+        </button>
+    </aside>
+
+    <!-- CONTEÚDO -->
+    <main id="main-content">
+
+        <!-- ══ DASHBOARD ══ -->
+        <section id="sec-dash" class="section active">
+            <div style="margin-bottom:1.25rem">
+                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Performance</h2>
+                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Tempo real · Atualização automática</p>
             </div>
-        </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card" style="border-left:3px solid #10b981"><p class="kpi-label">Receita Total</p><p class="kpi-value" id="receitaBruta">R$ 0,00</p><p class="kpi-sub">Todos os pedidos</p></div>
+                <div class="kpi-card" style="border-left:3px solid #3b82f6"><p class="kpi-label">Pedidos</p><p class="kpi-value" id="totalPedidos">0</p><p class="kpi-sub">Registrados</p></div>
+                <div class="kpi-card" style="border-left:3px solid #facc15"><p class="kpi-label">Pendentes</p><p class="kpi-value" id="totalPendentes">0</p><p class="kpi-sub">Aguardando</p></div>
+                <div class="kpi-card" style="border-left:3px solid #10b981"><p class="kpi-label">Confirmados</p><p class="kpi-value" id="totalPagos">0</p><p class="kpi-sub">Pagos</p></div>
+            </div>
+
+            <div class="glass" style="padding:1.25rem;margin-bottom:1rem">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-chart-pie" style="color:#60a5fa;margin-right:.4rem"></i> Vendas por Sabor
+                </p>
+                <div style="position:relative;height:clamp(180px,35vw,240px);width:100%">
+                    <canvas id="chartFlavors"></canvas>
+                </div>
+            </div>
+
+            <div class="glass" style="padding:1.25rem">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-clock" style="color:#facc15;margin-right:.4rem"></i> Últimos Pedidos
+                </p>
+                <div id="rankingTableBody"></div>
+            </div>
+        </section>
+
+        <!-- ══ RELATÓRIOS ══ -->
+        <section id="sec-relatorio" class="section">
+            <div style="margin-bottom:1.25rem">
+                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Relatórios</h2>
+                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Análise financeira por período.</p>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <span class="filter-label">Período</span>
+                    <select id="filtro-periodo" class="filter-select" onchange="onPeriodoChange()">
+                        <option value="hoje">Hoje</option>
+                        <option value="ontem">Ontem</option>
+                        <option value="semana" selected>Esta semana</option>
+                        <option value="semana_passada">Semana passada</option>
+                        <option value="mes">Este mês</option>
+                        <option value="mes_passado">Mês passado</option>
+                        <option value="personalizado">Personalizado...</option>
+                    </select>
+                </div>
+                <div id="filtro-datas-custom" style="display:none;flex:2;gap:.625rem;flex-wrap:wrap">
+                    <div class="filter-group">
+                        <span class="filter-label">Data Início</span>
+                        <input type="date" id="filtro-inicio" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Data Fim</span>
+                        <input type="date" id="filtro-fim" class="filter-input">
+                    </div>
+                </div>
+                <div class="filter-group" style="min-width:140px;flex:0">
+                    <span class="filter-label">Status</span>
+                    <select id="filtro-status" class="filter-select">
+                        <option value="todos">Todos</option>
+                        <option value="Pago">Apenas pagos</option>
+                        <option value="Pendente">Apenas pendentes</option>
+                    </select>
+                </div>
+                <button class="btn-blue" onclick="gerarRelatorio()" style="align-self:flex-end">
+                    <i class="fas fa-search" style="margin-right:.4rem"></i> Gerar
+                </button>
+            </div>
+
+            <!-- KPIs do período -->
+            <div class="rel-grid" id="rel-kpis" style="display:none">
+                <div class="rel-card" style="border-left:3px solid #10b981">
+                    <p class="rel-title">Receita do Período</p>
+                    <p class="rel-value" id="rel-receita" style="color:#34d399">R$ 0,00</p>
+                    <p class="rel-sub" id="rel-periodo-label">—</p>
+                </div>
+                <div class="rel-card" style="border-left:3px solid #3b82f6">
+                    <p class="rel-title">Pedidos</p>
+                    <p class="rel-value" id="rel-qtd">0</p>
+                    <p class="rel-sub">No período</p>
+                </div>
+                <div class="rel-card" style="border-left:3px solid #f59e0b">
+                    <p class="rel-title">Ticket Médio</p>
+                    <p class="rel-value" id="rel-ticket" style="color:#fbbf24">R$ 0,00</p>
+                    <p class="rel-sub">Por pedido</p>
+                </div>
+                <div class="rel-card" style="border-left:3px solid #8b5cf6">
+                    <p class="rel-title">Pizzas Vendidas</p>
+                    <p class="rel-value" id="rel-pizzas" style="color:#a78bfa">0</p>
+                    <p class="rel-sub">Unidades</p>
+                </div>
+            </div>
+
+            <!-- Gráfico de barras por dia -->
+            <div class="glass" id="rel-chart-wrap" style="padding:1.25rem;margin-bottom:1rem;display:none">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-chart-bar" style="color:#60a5fa;margin-right:.4rem"></i> Receita por Dia
+                </p>
+                <div style="position:relative;height:clamp(160px,28vw,220px);width:100%">
+                    <canvas id="chartRelatorio"></canvas>
+                </div>
+            </div>
+
+            <!-- Ranking sabores -->
+            <div class="glass" id="rel-sabores-wrap" style="padding:1.25rem;margin-bottom:1rem;display:none">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-trophy" style="color:#fbbf24;margin-right:.4rem"></i> Ranking de Sabores
+                </p>
+                <div style="overflow-x:auto">
+                    <table class="tabela-rel">
+                        <thead><tr><th>Sabor</th><th>Qtd.</th><th>% Total</th></tr></thead>
+                        <tbody id="rel-sabores-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lista de pedidos do período -->
+            <div class="glass" id="rel-pedidos-wrap" style="padding:1.25rem;display:none">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-list" style="color:#34d399;margin-right:.4rem"></i> Pedidos do Período
+                </p>
+                <div style="overflow-x:auto">
+                    <table class="tabela-rel">
+                        <thead><tr><th>#</th><th>Data</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th></tr></thead>
+                        <tbody id="rel-pedidos-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vazio -->
+            <div id="rel-vazio" style="display:none;text-align:center;padding:3rem 1rem;color:#4b5563">
+                <i class="fas fa-chart-bar" style="font-size:2.5rem;margin-bottom:.875rem;display:block;opacity:.3"></i>
+                <p style="font-weight:700;margin-bottom:.25rem;color:#6b7280">Nenhum pedido encontrado</p>
+                <p style="font-size:12px">Ajuste o período ou o filtro de status e clique em Gerar.</p>
+            </div>
+        </section>
+
+        <!-- ══ PEDIDOS ══ -->
+        <section id="sec-orders" class="section">
+            <div style="margin-bottom:1.25rem">
+                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Pedidos</h2>
+                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Confirme os pagamentos abaixo.</p>
+            </div>
+            <div id="ordersTableBody"></div>
+        </section>
+
+        <!-- ══ ESTOQUE ══ -->
+        <section id="sec-inventory" class="section">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
+                <div>
+                    <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Estoque</h2>
+                    <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Sabores e quantidades.</p>
+                </div>
+                <button onclick="abrirModal()"
+                        style="display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;border-radius:12px;
+                               background:#2563eb;color:white;font-weight:900;font-size:13px;border:none;cursor:pointer;
+                               transition:background .2s;white-space:nowrap;font-family:inherit"
+                        onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
+                    <i class="fas fa-plus"></i> Novo Sabor
+                </button>
+            </div>
+            <div id="inventoryList"></div>
+        </section>
+
     </main>
 
-    <!-- ============================== BOTÃO FLUTUANTE CARRINHO ============================== -->
-    <button onclick="toggleCart()"
-            class="fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-2xl z-50 flex items-center gap-3 hover:scale-105 transition hover:bg-green-700">
-        <i class="fas fa-shopping-basket text-xl"></i>
-        <span class="font-bold" id="floatingTotal">R$ 0,00</span>
-    </button>
-
-    <!-- ============================== SIDEBAR CARRINHO ============================== -->
-    <div id="cartSidebar"
-         class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-[60] flex flex-col">
-
-        <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
-            <h3 class="text-xl font-bold"><i class="fas fa-shopping-basket mr-2"></i>Seu Pedido</h3>
-            <button onclick="toggleCart()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+    <!-- BOTTOM NAV MOBILE -->
+    <nav id="bottom-nav">
+        <div class="bnav-inner">
+            <button onclick="showSection('dash')"      id="bnav-dash"      class="bnav-btn active"><i class="fas fa-chart-line"></i><span>Dash</span></button>
+            <button onclick="showSection('relatorio')" id="bnav-relatorio" class="bnav-btn"><i class="fas fa-file-invoice-dollar"></i><span>Relatório</span></button>
+            <button onclick="showSection('orders')"    id="bnav-orders"    class="bnav-btn"><i class="fas fa-shopping-basket"></i><span>Pedidos</span></button>
+            <button onclick="showSection('inventory')" id="bnav-inventory" class="bnav-btn"><i class="fas fa-pizza-slice"></i><span>Estoque</span></button>
+            <a href="index.html" target="_blank"       class="bnav-btn store-btn"><i class="fas fa-store"></i><span>Loja</span></a>
+            <button onclick="location.reload()"        class="bnav-btn logout-btn"><i class="fas fa-sign-out-alt"></i><span>Sair</span></button>
         </div>
+    </nav>
+</div>
 
-        <div id="cartItems" class="flex-1 overflow-y-auto p-6"></div>
-
-        <div class="p-6 border-t bg-gray-50">
-            <div class="flex justify-between mb-4 font-bold text-xl text-blue-950">
-                <span>Total:</span>
-                <span id="totalValue">R$ 0,00</span>
-            </div>
-            <button onclick="validarEFinalizar()"
-                    class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition">
-                Finalizar Pedido
+<!-- ════════════ MODAL PIZZA ════════════ -->
+<div id="modalPizza" class="modal-overlay">
+    <div class="modal-box">
+        <h2 id="pizzaModalTitle" style="font-size:1.2rem;font-weight:900;margin-bottom:1.25rem">Novo Sabor</h2>
+        <input type="text"   id="pName"     placeholder="Nome da Pizza"                class="modal-input">
+        <input type="number" id="pPrice"    placeholder="Preço de venda (R$)"          class="modal-input" step="0.01">
+        <input type="number" id="pCost"     placeholder="Custo de produção (R$) — opcional" class="modal-input" step="0.01">
+        <input type="url"    id="pImageUrl" placeholder="URL da Foto (https://...)"    class="modal-input">
+        <p style="font-size:11px;color:#4b5563;margin-top:-.5rem;margin-bottom:1rem">Cole o link direto de uma imagem.</p>
+        <div style="display:flex;gap:.75rem">
+            <button onclick="salvarPizza()"
+                    style="flex:1;padding:1rem;border-radius:12px;background:#2563eb;color:white;
+                           font-weight:900;font-size:13px;border:none;cursor:pointer;transition:background .2s;font-family:inherit"
+                    onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
+                SALVAR
+            </button>
+            <button onclick="fecharModal()"
+                    style="flex:1;padding:1rem;border-radius:12px;background:rgba(255,255,255,.06);
+                           color:#9ca3af;font-weight:900;font-size:13px;border:none;cursor:pointer;font-family:inherit">
+                CANCELAR
             </button>
         </div>
     </div>
+</div>
 
-    <!-- ============================== MODAL IDENTIFICAÇÃO ============================== -->
-    <div id="modalIdentificacao"
-         class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4 backdrop-blur-sm flex">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden modal-inner">
-
-            <div class="p-6 bg-blue-950 text-white flex justify-between items-center">
-                <h2 class="text-xl font-bold">Quem está pedindo?</h2>
-                <button onclick="fecharModalIdentificacao()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
-            </div>
-
-            <div class="p-6 space-y-4">
-
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Nome Completo</label>
-                        <input type="text" id="custName" placeholder="Ex: Lucas Silva"
-                               class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase block mb-1">WhatsApp (Com DDD)</label>
-                        <input type="tel" id="custPhone" placeholder="(00) 90000-0000"
-                               class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase block mb-1">Observações</label>
-                        <textarea id="custNotes" rows="2" placeholder="Ex: Sem cebola, borda recheada..."
-                                  class="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"></textarea>
-                    </div>
-                </div>
-
-                <!-- PIX -->
-                <div class="bg-green-50 p-5 rounded-xl border border-green-200">
-                    <p class="text-green-800 font-bold text-center mb-3">💚 PAGAMENTO VIA PIX</p>
-                    <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-green-100">
-                        <code class="font-mono text-sm text-green-700">35991264352</code>
-                        <button onclick="copyPix()"
-                                class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition">
-                            Copiar
-                        </button>
-                    </div>
-                    <p class="text-xs text-green-700 text-center mt-2">Envie o comprovante pelo WhatsApp após o pedido.</p>
-                </div>
-
-                <button onclick="enviarPedido()"
-                        class="bg-blue-600 text-white w-full py-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all">
-                    Confirmar Pedido
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script src="client.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>
