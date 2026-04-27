@@ -1,0 +1,20 @@
+{
+    "name": "Pizza Camp — Aguias de Cristo",
+    "short_name": "Pizza Camp",
+    "description": "Compre pizzas e ajude o Clube Aguias de Cristo a ir ao Campori DSA 2026!",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#1e3a8a",
+    "theme_color": "#1e3a8a",
+    "lang": "pt-BR",
+    "icons": [
+        { "src": "logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+        { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    ],
+    "shortcuts": [
+        { "name": "Ver Cardápio", "url": "./index.html#cardapio", "icons": [{ "src": "logo.png", "sizes": "192x192" }] },
+        { "name": "Painel Admin",  "url": "./admin.html",         "icons": [{ "src": "logo.png", "sizes": "192x192" }] }
+    ]
+}
