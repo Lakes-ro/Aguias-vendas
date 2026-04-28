@@ -19,20 +19,22 @@ let todosOsPedidos = [];
 // ─────────────────────────────────────────
 // 1. LOGIN — display puro, sem Tailwind
 // ─────────────────────────────────────────
-document.getElementById('loginForm').addEventListener('submit', (e) => {
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const pass  = document.getElementById('adminPass').value.trim();
     const errEl = document.getElementById('loginError');
 
     if (pass === 'sempreavante') {
-        document.getElementById('loginOverlay').style.display  = 'none';
-        document.getElementById('mainDashboard').style.opacity = '1';
-        init();
-    } else {
-        errEl.style.display = 'block';
-        setTimeout(() => { errEl.style.display = 'none'; }, 3000);
-    }
-});
+            document.getElementById('loginOverlay').style.display  = 'none';
+            document.getElementById('mainDashboard').style.opacity = '1';
+            init();
+        } else {
+            errEl.style.display = 'block';
+            setTimeout(() => { errEl.style.display = 'none'; }, 3000);
+        }
+    });
+}); // fim DOMContentLoaded
 
 // ─────────────────────────────────────────
 // 2. INICIALIZAÇÃO
