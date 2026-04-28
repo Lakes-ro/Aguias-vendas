@@ -1,7 +1,7 @@
 // ============================================================
-// SW.JS — Service Worker | AGUIAS DE CRISTO Pizza Camp v2
+// SW.JS — Service Worker | AGUIAS DE CRISTO Pizza Camp v3
 // ============================================================
-const CACHE = 'pizzacamp-v2';
+const CACHE = 'pizzacamp-v3';
 const STATIC = [
     './',
     './index.html',
@@ -15,7 +15,8 @@ const STATIC = [
 
 self.addEventListener('install', e => {
     e.waitUntil(
-        caches.open(CACHE).then(c => Promise.allSettled(STATIC.map(u => c.add(u))))
+        caches.open(CACHE)
+              .then(c => Promise.allSettled(STATIC.map(u => c.add(u))))
               .then(() => self.skipWaiting())
     );
 });
@@ -23,28 +24,51 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
     e.waitUntil(
         caches.keys()
-              .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+              .then(keys => Promise.all(
+                  keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+              ))
               .then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', e => {
+    // Ignora requisições não-GET (POST, PUT, DELETE...)
+    if (e.request.method !== 'GET') return;
+
     const url = new URL(e.request.url);
-    // Supabase: sempre rede
+
+    // Supabase: sempre vai para a rede, sem cache
     if (url.hostname.includes('supabase.co')) {
-        e.respondWith(fetch(e.request).catch(() => new Response('{}', { headers: { 'Content-Type': 'application/json' } })));
+        e.respondWith(
+            fetch(e.request).catch(() =>
+                new Response('{}', { headers: { 'Content-Type': 'application/json' } })
+            )
+        );
         return;
     }
-    // Demais: cache-first
+
+    // Demais recursos: tenta cache primeiro, depois rede
     e.respondWith(
         caches.match(e.request).then(cached => {
             if (cached) return cached;
-            return fetch(e.request).then(res => {
-                if (res && res.status === 200) {
-                    caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+
+            // Busca na rede e armazena no cache
+            return fetch(e.request).then(networkResponse => {
+                // Só armazena respostas válidas
+                if (
+                    networkResponse &&
+                    networkResponse.status === 200 &&
+                    networkResponse.type !== 'opaque'
+                ) {
+                    // Clona ANTES de qualquer uso — evita "body already used"
+                    const toCache = networkResponse.clone();
+                    caches.open(CACHE).then(c => c.put(e.request, toCache));
                 }
-                return res;
-            }).catch(() => caches.match('./index.html'));
+                return networkResponse;
+            }).catch(() => {
+                // Offline: tenta servir a página principal
+                return caches.match('./index.html');
+            });
         })
     );
 });
