@@ -586,3 +586,25 @@ function iniciarRealtime() {
 function playNotificationSound() {
     try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch(e) {}
 }
+// ── Toggle visibilidade da senha ────────────────────────────
+function toggleVerSenha() {
+    const input = document.getElementById('adminPass');
+    const icone = document.getElementById('iconeOlho');
+    if (!input || !icone) return;
+
+    // Guarda a posição do cursor antes de trocar o tipo
+    const pos = input.selectionStart;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        input.style.letterSpacing = '.05em';
+        icone.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        input.style.letterSpacing = '.15em';
+        icone.className = 'fas fa-eye';
+    }
+
+    // Restaura cursor sem chamar focus() (que reverte o tipo no iOS)
+    try { input.setSelectionRange(pos, pos); } catch(e) {}
+}
