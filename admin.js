@@ -12,29 +12,32 @@ function brl(value) {
     return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+
+// URL pública do bucket de imagens
+const STORAGE_URL = `${SUPABASE_URL}/storage/v1/object/public/pizzas/`;
+
 let chartDash = null;
+let pedidoParaDeletar = null;
 let chartRel  = null;
 let todosOsPedidos = [];
 
 // ─────────────────────────────────────────
 // 1. LOGIN — display puro, sem Tailwind
 // ─────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
+document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const pass  = document.getElementById('adminPass').value.trim();
     const errEl = document.getElementById('loginError');
 
     if (pass === 'sempreavante') {
-            document.getElementById('loginOverlay').style.display  = 'none';
-            document.getElementById('mainDashboard').style.opacity = '1';
-            init();
-        } else {
-            errEl.style.display = 'block';
-            setTimeout(() => { errEl.style.display = 'none'; }, 3000);
-        }
-    });
-}); // fim DOMContentLoaded
+        document.getElementById('loginOverlay').style.display  = 'none';
+        document.getElementById('mainDashboard').style.opacity = '1';
+        init();
+    } else {
+        errEl.style.display = 'block';
+        setTimeout(() => { errEl.style.display = 'none'; }, 3000);
+    }
+});
 
 // ─────────────────────────────────────────
 // 2. INICIALIZAÇÃO
@@ -72,8 +75,8 @@ async function carregarDados() {
 // ─────────────────────────────────────────
 function renderizarKPIs(pedidos) {
     const receita   = pedidos.reduce((a, p) => a + Number(p.total || 0), 0);
-    const pagos     = pedidos.filter(p => p.status === 'Pago').length;
-    const pendentes = pedidos.filter(p => p.status !== 'Pago').length;
+    const pagos     = pedidos.filter(p => p.status === 'Pago' || p.status === 'Confirmado').length;
+    const pendentes = pedidos.filter(p => p.status === 'Pendente').length;
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
     set('receitaBruta', brl(receita));
     set('totalPedidos',   pedidos.length);
@@ -142,17 +145,59 @@ function renderizarPedidos(pedidos) {
             </div>
             <p style="font-weight:700;font-size:14px">${p.cliente_nome || '—'}</p>
             <p style="font-size:11px;color:#6b7280;margin-bottom:.25rem">${p.cliente_tel || ''}&nbsp;·&nbsp;${dt}</p>
+            <p style="font-size:11px;margin-bottom:.25rem">
+                ${p.forma_pagamento === 'cartao'
+                    ? '<span style="background:rgba(59,130,246,.12);color:#60a5fa;font-weight:700;padding:2px 8px;border-radius:99px;font-size:10px">💳 CARTÃO</span>'
+                    : '<span style="background:rgba(16,185,129,.12);color:#34d399;font-weight:700;padding:2px 8px;border-radius:99px;font-size:10px">💚 PIX</span>'
+                }
+            </p>
             <p style="font-size:11px;color:#9ca3af;margin-bottom:.75rem;line-height:1.4">${p.itens || '—'}</p>
-            ${p.status !== 'Pago'
-                ? `<button onclick="marcarComoPago(${p.id})"
-                          style="width:100%;padding:10px;border-radius:10px;background:#059669;color:white;font-weight:800;font-size:12px;border:none;cursor:pointer;letter-spacing:.04em;font-family:inherit"
-                          onmouseover="this.style.background='#10b981'" onmouseout="this.style.background='#059669'">
-                       ✓ CONFIRMAR PAGAMENTO
-                   </button>`
-                : `<div style="text-align:center;font-size:11px;color:#34d399;font-weight:700;padding:6px 0"><i class="fas fa-check-double"></i> Pagamento confirmado</div>`
-            }
+            <div style="display:flex;gap:.625rem;margin-top:.25rem">
+                ${p.status === 'Pago'
+                    ? `<div style="flex:1;text-align:center;font-size:11px;color:#34d399;font-weight:700;padding:10px 0"><i class="fas fa-check-double"></i> Pagamento confirmado</div>`
+                    : p.status === 'Confirmado'
+                        ? `<div style="flex:1;text-align:center;font-size:11px;color:#60a5fa;font-weight:700;padding:10px 0"><i class="fas fa-credit-card"></i> Pago no cartão · confirmar entrega</div>`
+                        : `<button onclick="marcarComoPago(${p.id})"
+                                  style="flex:1;padding:10px;border-radius:10px;background:#059669;color:white;font-weight:800;font-size:12px;border:none;cursor:pointer;letter-spacing:.04em;font-family:inherit"
+                                  onmouseover="this.style.background='#10b981'" onmouseout="this.style.background='#059669'">
+                               ✓ CONFIRMAR COMPROVANTE PIX
+                           </button>`
+                }
+                <button onclick="abrirConfirmDelete(${p.id}, \`${(p.cliente_nome||'').replace(/`/g,'')}\`)"
+                        style="padding:10px 14px;border-radius:10px;background:rgba(239,68,68,.12);color:#f87171;font-weight:800;font-size:12px;border:none;cursor:pointer;font-family:inherit;flex-shrink:0"
+                        title="Remover pedido">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </div>`;
     }).join('');
+}
+
+
+// ─────────────────────────────────────────
+// EXCLUIR PEDIDO
+// ─────────────────────────────────────────
+function abrirConfirmDelete(id, nomeCliente) {
+    pedidoParaDeletar = id;
+    const desc = document.getElementById('confirmDeleteDesc');
+    if (desc) desc.innerHTML = `Pedido de <strong>${nomeCliente || 'cliente'}</strong> será removido permanentemente.<br><span style="color:#fbbf24;font-size:11px">⚠️ Esta ação não pode ser desfeita.</span>`;
+    const modal = document.getElementById('modalConfirmDelete');
+    if (modal) modal.style.display = 'flex';
+}
+
+function fecharConfirmDelete() {
+    pedidoParaDeletar = null;
+    const modal = document.getElementById('modalConfirmDelete');
+    if (modal) modal.style.display = 'none';
+}
+
+async function confirmarExclusaoPedido() {
+    if (!pedidoParaDeletar) return;
+    const id = pedidoParaDeletar;
+    fecharConfirmDelete();
+    const { error } = await _supabase.from('pedidos').delete().eq('id', id);
+    if (error) { alert('Erro ao remover pedido: ' + error.message); return; }
+    await carregarDados();
 }
 
 async function marcarComoPago(id) {
@@ -214,10 +259,77 @@ async function deletarPizza(id) {
 // ─────────────────────────────────────────
 // 9. MODAL PIZZA
 // ─────────────────────────────────────────
+
+// ─────────────────────────────────────────
+// UPLOAD DE IMAGEM
+// ─────────────────────────────────────────
+function previewImagem(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Valida tamanho (5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Imagem muito grande! Máximo 5 MB.');
+        input.value = '';
+        return;
+    }
+
+    // Mostra preview local imediato
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const preview = document.getElementById('uploadPreview');
+        const area    = document.getElementById('uploadArea');
+        if (preview) { preview.src = e.target.result; }
+        if (area)    { area.classList.add('has-preview'); }
+    };
+    reader.readAsDataURL(file);
+}
+
+async function uploadImagemPizza(file, pizzaId) {
+    const loading = document.getElementById('uploadLoading');
+    if (loading) loading.classList.add('active');
+
+    try {
+        // Nome único: id da pizza + timestamp + extensão
+        const ext      = file.name.split('.').pop().toLowerCase();
+        const fileName = `${pizzaId || Date.now()}_${Date.now()}.${ext}`;
+
+        const { data, error } = await _supabase.storage
+            .from('pizzas')
+            .upload(fileName, file, {
+                cacheControl: '3600',
+                upsert: true,          // substitui se já existir
+                contentType: file.type
+            });
+
+        if (error) throw error;
+
+        // Retorna a URL pública da imagem
+        return STORAGE_URL + fileName;
+
+    } catch (err) {
+        console.error('Erro no upload:', err.message);
+        alert('Erro ao enviar a foto: ' + err.message);
+        return null;
+    } finally {
+        if (loading) loading.classList.remove('active');
+    }
+}
+
+function resetUploadArea() {
+    const input   = document.getElementById('pizzaFileInput');
+    const preview = document.getElementById('uploadPreview');
+    const area    = document.getElementById('uploadArea');
+    if (input)   input.value = '';
+    if (preview) { preview.src = ''; }
+    if (area)    area.classList.remove('has-preview');
+}
+
 function abrirModal()  { document.getElementById('modalPizza').style.display = 'flex'; }
 function fecharModal() {
     delete document.getElementById('modalPizza').dataset.editId;
     ['pName','pPrice','pCost','pImageUrl'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    resetUploadArea();
     document.getElementById('pizzaModalTitle').innerText = 'Novo Sabor';
     document.getElementById('modalPizza').style.display  = 'none';
 }
@@ -226,21 +338,63 @@ function prepararEdicao(id, nome, preco, custo, imageUrl) {
     document.getElementById('pPrice').value    = preco;
     document.getElementById('pCost').value     = custo || '';
     document.getElementById('pImageUrl').value = imageUrl || '';
-    document.getElementById('pizzaModalTitle').innerText     = 'Editar Sabor';
+    document.getElementById('pizzaModalTitle').innerText = 'Editar Sabor';
     document.getElementById('modalPizza').dataset.editId = id;
+
+    // Se já tem imagem, mostra no preview
+    if (imageUrl) {
+        const preview = document.getElementById('uploadPreview');
+        const area    = document.getElementById('uploadArea');
+        if (preview) { preview.src = imageUrl; }
+        if (area)    { area.classList.add('has-preview'); }
+    }
     abrirModal();
 }
 async function salvarPizza() {
     const name     = document.getElementById('pName').value.trim();
     const price    = document.getElementById('pPrice').value;
     const cost     = document.getElementById('pCost').value;
-    const imageUrl = document.getElementById('pImageUrl').value.trim();
     const id       = document.getElementById('modalPizza').dataset.editId;
+
     if (!name || !price) { alert('Preencha Nome e Preço!'); return; }
-    const payload  = { name, price: parseFloat(price), cost: cost ? parseFloat(cost) : null, image_url: imageUrl || null };
+
+    // Verifica se tem arquivo para upload
+    const fileInput = document.getElementById('pizzaFileInput');
+    const file      = fileInput?.files[0];
+
+    let imageUrl = document.getElementById('pImageUrl').value.trim() || null;
+
+    // Se tem arquivo selecionado, faz upload primeiro
+    if (file) {
+        // Para upload, precisamos do ID da pizza. Se for novo, insere primeiro sem imagem.
+        if (!id) {
+            const { data: nova, error: errIns } = await _supabase
+                .from('pizzas')
+                .insert([{ name, price: parseFloat(price), cost: cost ? parseFloat(cost) : null, image_url: null, estoque: 0 }])
+                .select('id')
+                .single();
+            if (errIns) { alert('Erro ao salvar: ' + errIns.message); return; }
+
+            const url = await uploadImagemPizza(file, nova.id);
+            if (url) {
+                await _supabase.from('pizzas').update({ image_url: url }).eq('id', nova.id);
+            }
+            fecharModal();
+            await carregarDados();
+            return;
+        }
+
+        // Edição: faz upload e já tem o ID
+        const url = await uploadImagemPizza(file, id);
+        if (url) imageUrl = url;
+    }
+
+    const payload = { name, price: parseFloat(price), cost: cost ? parseFloat(cost) : null, image_url: imageUrl };
+
     const { error } = id
         ? await _supabase.from('pizzas').update(payload).eq('id', id)
         : await _supabase.from('pizzas').insert([{ ...payload, estoque: 0 }]);
+
     if (error) { alert('Erro ao salvar: ' + error.message); return; }
     fecharModal();
     await carregarDados();
