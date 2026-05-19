@@ -1,48 +1,464 @@
 /* ============================================================
-   STYLES.CSS — AGUIAS DE CRISTO | Pizza Camp
+   CLIENT.CSS — AGUIAS DE CRISTO | Pizza Camp
+   Estilos da vitrine do cliente
    ============================================================ */
 
-:root {
-    --primary: #1e3a5f;
-    --accent: #ef4444;
-    --bg-light: #f9fafb;
+/* ── BOTÃO ADMIN FIXO ── */
+        #btn-go-admin {
+            position: fixed; top: .875rem; right: .875rem; z-index: 200;
+            background: rgba(30,58,138,.85); backdrop-filter: blur(8px);
+            color: white; border: 1px solid rgba(255,255,255,.2); border-radius: 10px;
+            padding: 7px 13px; font-size: 11px; font-weight: 800;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            text-decoration: none; letter-spacing: .03em; transition: background .2s;
+            font-family: 'Inter', sans-serif;
+        }
+        #btn-go-admin:hover { background: rgba(37,99,235,.9); }
+
+        /* ── BANNERS PWA ── */
+        .pwa-banner {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+            transform: translateY(110%); transition: transform .4s cubic-bezier(.4,0,.2,1);
+            pointer-events: none;
+        }
+        .pwa-banner.visible { transform: translateY(0); pointer-events: all; }
+
+        .pwa-card {
+            margin: 0 .75rem .75rem;
+            background: white; border-radius: 1.25rem;
+            box-shadow: 0 -4px 40px rgba(0,0,0,.15);
+            border: 2px solid #1e3a8a; overflow: hidden;
+        }
+        .pwa-topbar {
+            background: linear-gradient(135deg,#1e3a8a,#2563eb);
+            padding: .45rem 1rem; display: flex; align-items: center; gap: .4rem;
+        }
+        .pwa-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.35); }
+        .pwa-body { padding: 1.1rem 1.25rem; }
+        .pwa-icon {
+            width: 54px; height: 54px; border-radius: 13px;
+            background: #1e3a8a; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0; overflow: hidden;
+        }
+        .pwa-icon img { width:100%; height:100%; object-fit:cover; }
+        .pwa-btn-install {
+            background: linear-gradient(135deg,#1e3a8a,#2563eb);
+            color: white; border: none; border-radius: 11px;
+            padding: .75rem 1.25rem; font-weight: 900; font-size: 14px;
+            cursor: pointer; width: 100%; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+        }
+        .pwa-btn-close {
+            background: #f3f4f6; color: #6b7280; border: none;
+            border-radius: 11px; padding: .75rem 1rem;
+            font-weight: 700; font-size: 13px; cursor: pointer;
+            font-family: inherit; white-space: nowrap;
+        }
+        .ios-card {
+            margin: 0 .75rem .75rem; background: white;
+            border-radius: 1.25rem; padding: 1.25rem;
+            box-shadow: 0 -4px 40px rgba(0,0,0,.15); border: 2px solid #1e3a8a;
+        }
+        .ios-arrow { text-align:center; font-size:26px; animation: bounce .8s infinite alternate; }
+        @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(6px)} }
+    
+
+        #btn-pix.selected   { border-color:#16a34a; background:#dcfce7; box-shadow:0 0 0 3px rgba(22,163,74,.15); }
+        #btn-cartao.selected{ border-color:#2563eb; background:#dbeafe; box-shadow:0 0 0 3px rgba(37,99,235,.15); }
+        #btn-pix.selected span:nth-child(2)   { color:#166534; }
+        #btn-cartao.selected span:nth-child(2){ color:#1e40af; }
+
+/* ── BODY ───────────────────────────────────────────────────── */
+.font-inter { font-family: 'Inter', sans-serif; }
+
+/* ── HERO ───────────────────────────────────────────────────── */
+.hero-header { min-height: 60vh; }
+
+/* ── BOTÃO ADMIN ────────────────────────────────────────────── */
+.icon-lock { font-size: 10px; }
+
+/* ── SELETOR DE PAGAMENTO ───────────────────────────────────── */
+.pgto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .625rem;
+    margin-bottom: .875rem;
+}
+.pgto-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .375rem;
+    padding: .875rem .625rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+}
+.pgto-btn--pix {
+    border: 2px solid #16a34a;
+    background: #f0fdf4;
+}
+.pgto-btn--pix.selected {
+    border-color: #16a34a;
+    background: #dcfce7;
+    box-shadow: 0 0 0 3px rgba(22,163,74,.15);
+}
+.pgto-btn--cartao {
+    border: 2px solid #e5e7eb;
+    background: #f9fafb;
+}
+.pgto-btn--cartao.selected {
+    border-color: #2563eb;
+    background: #dbeafe;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+.pgto-emoji { font-size: 1.3rem; }
+.pgto-label { font-size: 12px; font-weight: 800; }
+.pgto-label--pix    { color: #166534; }
+.pgto-label--cartao { color: #374151; }
+.pgto-hint { font-size: 10px; }
+.pgto-hint--pix    { color: #16a34a; }
+.pgto-hint--cartao { color: #6b7280; }
+
+.detalhe-cartao { display: none; }
+
+/* ── BANNER PWA ANDROID ─────────────────────────────────────── */
+.pwa-bar-label {
+    color: rgba(255,255,255,.7);
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: auto;
+}
+.pwa-app-row {
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+    margin-bottom: 1rem;
+}
+.pwa-app-info { flex: 1; min-width: 0; }
+.pwa-app-name { font-weight: 900; font-size: 15px; color: #1e293b; }
+.pwa-app-sub  { font-size: 12px; color: #64748b; margin-top: 2px; }
+.pwa-safe-badge { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.pwa-shield-icon { font-size: 10px; color: #16a34a; }
+.pwa-safe-text { font-size: 10px; color: #16a34a; font-weight: 700; }
+.pwa-info-box {
+    background: #eff6ff;
+    border-radius: 12px;
+    padding: .875rem;
+    margin-bottom: .875rem;
+    border: 1px solid #bfdbfe;
+}
+.pwa-info-title { font-size: 13px; color: #1e40af; font-weight: 700; margin-bottom: .25rem; }
+.pwa-info-desc  { font-size: 12px; color: #3b82f6; line-height: 1.5; }
+.pwa-btn-row    { display: flex; gap: .625rem; }
+
+/* ── BANNER PWA iOS ─────────────────────────────────────────── */
+.pwa-icon--sm { width: 44px; height: 44px; border-radius: 10px; }
+.ios-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .875rem; }
+.ios-app-row { display: flex; align-items: center; gap: .75rem; }
+.ios-title    { font-weight: 900; font-size: 14px; color: #1e293b; }
+.ios-subtitle { font-size: 11px; color: #64748b; }
+.ios-close-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #f1f5f9; border: none; color: #94a3b8;
+    font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.ios-steps { background: #f8fafc; border-radius: 12px; padding: .875rem; border: 1px solid #e2e8f0; }
+.ios-steps-title { font-size: 13px; color: #334155; font-weight: 700; margin-bottom: .625rem; }
+.ios-step { display: flex; align-items: flex-start; gap: .625rem; margin-bottom: .5rem; }
+.ios-step:last-child { margin-bottom: 0; }
+.ios-step-num {
+    background: #1e3a8a; color: white; border-radius: 50%;
+    width: 22px; height: 22px; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0;
+}
+.ios-step-text { font-size: 12px; color: #475569; line-height: 1.5; }
+.text-navy { color: #1e3a8a; }
+
+
+/* ════════════════════════════════════════════════════════════
+   MODAL IDENTIFICAÇÃO — RESPONSIVO MOBILE
+   ════════════════════════════════════════════════════════════ */
+
+/* Overlay: scroll vertical quando conteúdo maior que a tela */
+.modal-overlay-scroll {
+    overflow-y: auto;
+    align-items: flex-start;   /* no mobile, começa do topo */
+    padding: 1rem;
 }
 
-/* Reset de imagens */
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
+/* Card do modal: sem overflow-hidden, altura máxima com scroll interno */
+.modal-inner-scroll {
+    margin: auto;              /* centraliza verticalmente quando há espaço */
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Transições de seção */
-.page-section {
+/* No desktop, volta a centralizar */
+@media (min-width: 640px) {
+    .modal-overlay-scroll {
+        align-items: center;
+        padding: 1.5rem;
+    }
+    .modal-inner-scroll {
+        max-height: calc(100dvh - 3rem);
+    }
+}
+
+/* ════════════════════════════════════════════════════════════
+   TELA DE SUCESSO — DARKTECH RESPONSIVA
+   ════════════════════════════════════════════════════════════ */
+
+/* Card principal de sucesso (fundo escuro) */
+.sucesso-card {
+    background: #0a0e17;
+    border: 1px solid rgba(59,130,246,.4);
+    border-radius: 1.25rem;
+    box-shadow:
+        0 0 0 1px rgba(59,130,246,.1),
+        0 0 40px rgba(59,130,246,.12);
+    overflow: hidden;
+}
+
+/* Cabeçalho */
+.sucesso-header {
+    background: linear-gradient(135deg, #0f172a, #1e3a8a);
+    padding: 1.25rem 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(59,130,246,.25);
+}
+.sucesso-check-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(16,185,129,.15);
+    border: 2px solid rgba(16,185,129,.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto .75rem;
+    font-size: 1.5rem;
+    box-shadow: 0 0 20px rgba(16,185,129,.25);
+}
+.sucesso-titulo {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #f1f5f9;
+    margin-bottom: .2rem;
+    letter-spacing: -.02em;
+}
+.sucesso-subtitulo {
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* Corpo */
+.sucesso-body {
+    padding: 1.25rem 1.5rem 1.5rem;
+}
+
+/* Box do número do pedido */
+.sucesso-pedido-box {
+    background: rgba(59,130,246,.08);
+    border: 1px solid rgba(59,130,246,.2);
+    border-radius: .875rem;
+    padding: .875rem 1rem;
+    text-align: center;
+    margin-bottom: 1.25rem;
+}
+.sucesso-pedido-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .375rem;
+}
+.sucesso-pedido-codigo {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #60a5fa;
+    letter-spacing: .04em;
+    text-shadow: 0 0 20px rgba(96,165,250,.4);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+@media (min-width: 400px) {
+    .sucesso-pedido-codigo { font-size: 2rem; }
+}
+.sucesso-pedido-info {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: .375rem;
+}
+
+/* Botão copiar código */
+.btn-copiar-codigo {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: .5rem;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(59,130,246,.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59,130,246,.25);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+}
+.btn-copiar-codigo:hover {
+    background: rgba(59,130,246,.22);
+}
+
+/* Label seção */
+.sucesso-section-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: .625rem;
+}
+
+/* Área de upload */
+.upload-area-comprovante {
+    border: 2px dashed rgba(59,130,246,.3);
+    border-radius: .875rem;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: .75rem;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+}
+.upload-area-comprovante:hover {
+    border-color: rgba(59,130,246,.6);
+    background: rgba(59,130,246,.06);
+}
+.upload-area-comprovante.has-file {
+    border-color: rgba(16,185,129,.5);
+    background: rgba(16,185,129,.06);
+}
+
+/* Botão upload */
+.btn-upload {
     display: none;
-    animation: slideUp 0.4s ease-out;
+    width: 100%;
+    padding: .875rem;
+    border-radius: .75rem;
+    background: #1d4ed8;
+    color: white;
+    font-weight: 800;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+    margin-bottom: .625rem;
+    text-align: center;
 }
-.page-section.active {
-    display: block;
+.btn-upload:hover:not(:disabled) { background: #2563eb; }
+.btn-upload:disabled { cursor: default; }
+
+/* Status upload */
+.upload-status {
+    display: none;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    padding: .625rem;
+    border-radius: .75rem;
+    margin-bottom: .75rem;
 }
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+.upload-status.ok {
+    background: rgba(16,185,129,.1);
+    color: #34d399;
+    border: 1px solid rgba(16,185,129,.25);
+}
+.upload-status.err {
+    background: rgba(239,68,68,.1);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,.25);
 }
 
-/* Cards de pizza */
-.pizza-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Divisor OU */
+.sucesso-divisor {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    margin-bottom: .875rem;
 }
-.pizza-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+.sucesso-divisor::before,
+.sucesso-divisor::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,.07);
+}
+.sucesso-divisor span {
+    font-size: 10px;
+    color: #475569;
+    font-weight: 700;
 }
 
-/* Scrollbars */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-/* Modal inner content */
-.modal-inner {
-    transition: all 0.3s ease;
+/* Botão WhatsApp */
+.btn-whatsapp {
+    width: 100%;
+    padding: .875rem;
+    border-radius: .75rem;
+    background: #16a34a;
+    color: white;
+    font-weight: 800;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    transition: background .2s;
+    margin-bottom: .75rem;
 }
+.btn-whatsapp:hover { background: #15803d; }
+
+/* Botão cartão info */
+.sucesso-cartao-box {
+    background: rgba(59,130,246,.06);
+    border: 1px solid rgba(59,130,246,.15);
+    border-radius: .875rem;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: .875rem;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+/* Botão novo pedido */
+.btn-novo-pedido {
+    width: 100%;
+    padding: .875rem;
+    border-radius: .75rem;
+    background: rgba(255,255,255,.06);
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 13px;
+    border: 1px solid rgba(255,255,255,.08);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+}
+.btn-novo-pedido:hover { background: rgba(255,255,255,.1); }
