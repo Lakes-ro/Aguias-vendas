@@ -18,4 +18,3 @@
         { "name": "Painel Admin",  "url": "./admin.html",         "icons": [{ "src": "logo.png", "sizes": "192x192" }] }
     ]
 }
-
