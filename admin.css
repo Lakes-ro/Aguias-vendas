@@ -248,11 +248,15 @@
             #sidebar { display: none; }
             #bottom-nav { display: flex; }
             body { overflow: hidden; }
-            #mainDashboard { overflow: hidden; }
+            #mainDashboard { display: flex; flex-direction: column; overflow: hidden; height: 100dvh; }
             #main-content {
                 padding: 1rem .875rem;
                 padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + .75rem);
-                height: 100dvh; overflow-y: auto;
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                height: 100%;
             }
             .kpi-value { font-size: 1.2rem; }
             .rel-value { font-size: 1.2rem; }
