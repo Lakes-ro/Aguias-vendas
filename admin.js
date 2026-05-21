@@ -1,5 +1,5 @@
 // ============================================================
-// ADMIN.JS — AGUIAS DE CRISTO | Pizza Camp
+// ADMIN.JS -- AGUIAS DE CRISTO | Pizza Camp
 // ============================================================
 
 const SUPABASE_URL = 'https://ukuapolecardpsrmqxum.supabase.co';
@@ -7,13 +7,13 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
-// ── Formatação monetária BR (1.999,99) ──────────────────────
+// -- Formatacao monetaria BR (1.999,99) ----------------------
 function brl(value) {
     return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 
-// URL pública do bucket de imagens
+// URL publica do bucket de imagens
 const STORAGE_URL = `${SUPABASE_URL}/storage/v1/object/public/pizzas/`;
 
 let chartDash = null;
@@ -21,9 +21,9 @@ let pedidoParaDeletar = null;
 let chartRel  = null;
 let todosOsPedidos = [];
 
-// ─────────────────────────────────────────
-// 1. LOGIN — display puro, sem Tailwind
-// ─────────────────────────────────────────
+// -----------------------------------------
+// 1. LOGIN -- display puro, sem Tailwind
+// -----------------------------------------
 document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const pass  = document.getElementById('adminPass').value.trim();
@@ -39,18 +39,18 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     }
 });
 
-// ─────────────────────────────────────────
-// 2. INICIALIZAÇÃO
-// ─────────────────────────────────────────
+// -----------------------------------------
+// 2. INICIALIZAO
+// -----------------------------------------
 async function init() {
     showSection('dash');
     await carregarDados();
     iniciarRealtime();
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // 3. DADOS CENTRAL
-// ─────────────────────────────────────────
+// -----------------------------------------
 async function carregarDados() {
     try {
         const [resPedidos, resPizzas] = await Promise.all([
@@ -70,9 +70,9 @@ async function carregarDados() {
     }
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // 4. KPIs DASHBOARD
-// ─────────────────────────────────────────
+// -----------------------------------------
 function renderizarKPIs(pedidos) {
     const receita   = pedidos.reduce((a, p) => a + Number(p.total || 0), 0);
     const pagos     = pedidos.filter(p => p.status === 'Pago' || p.status === 'Confirmado').length;
@@ -84,9 +84,9 @@ function renderizarKPIs(pedidos) {
     set('totalPagos',     pagos);
 }
 
-// ─────────────────────────────────────────
-// 5. GRÁFICO DONUT — DASHBOARD
-// ─────────────────────────────────────────
+// -----------------------------------------
+// 5. GRFICO DONUT -- DASHBOARD
+// -----------------------------------------
 function renderizarGraficoDash(pedidos) {
     const ctx = document.getElementById('chartFlavors');
     if (!ctx) return;
@@ -105,9 +105,9 @@ function renderizarGraficoDash(pedidos) {
     });
 }
 
-// ─────────────────────────────────────────
-// 6. RANKING — últimos 5
-// ─────────────────────────────────────────
+// -----------------------------------------
+// 6. RANKING -- ultimos 5
+// -----------------------------------------
 function renderizarRanking(pedidos) {
     const el = document.getElementById('rankingTableBody');
     if (!el) return;
@@ -115,7 +115,7 @@ function renderizarRanking(pedidos) {
     el.innerHTML = pedidos.slice(0, 5).map(p => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .5rem;border-bottom:1px solid rgba(255,255,255,.05)">
             <div style="flex:1;min-width:0">
-                <p style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.cliente_nome || '—'}</p>
+                <p style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.cliente_nome || '--'}</p>
                 <p style="font-size:10px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.itens || ''}</p>
             </div>
             <div style="text-align:right;margin-left:.75rem;flex-shrink:0">
@@ -125,15 +125,15 @@ function renderizarRanking(pedidos) {
         </div>`).join('');
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // 7. LISTA DE PEDIDOS
-// ─────────────────────────────────────────
+// -----------------------------------------
 function renderizarPedidos(pedidos) {
     const el = document.getElementById('ordersTableBody');
     if (!el) return;
     if (!pedidos.length) { el.innerHTML = `<p style="text-align:center;color:#4b5563;font-size:13px;padding:2rem">Nenhum pedido registrado ainda.</p>`; return; }
     el.innerHTML = pedidos.map(p => {
-        const dt = p.created_at ? new Date(p.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+        const dt = p.created_at ? new Date(p.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '--';
         return `
         <div class="item-card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
@@ -143,20 +143,20 @@ function renderizarPedidos(pedidos) {
                     <span style="font-weight:900;color:#34d399;font-size:14px">${brl(p.total||0)}</span>
                 </div>
             </div>
-            <p style="font-weight:700;font-size:14px">${p.cliente_nome || '—'}</p>
-            <p style="font-size:11px;color:#6b7280;margin-bottom:.25rem">${p.cliente_tel || ''}&nbsp;·&nbsp;${dt}</p>
+            <p style="font-weight:700;font-size:14px">${p.cliente_nome || '--'}</p>
+            <p style="font-size:11px;color:#6b7280;margin-bottom:.25rem">${p.cliente_tel || ''}&nbsp;.&nbsp;${dt}</p>
             <p style="font-size:11px;margin-bottom:.25rem">
                 ${p.forma_pagamento === 'cartao'
                     ? '<span style="background:rgba(59,130,246,.12);color:#60a5fa;font-weight:700;padding:2px 8px;border-radius:99px;font-size:10px">💳 CARTÃO</span>'
                     : '<span style="background:rgba(16,185,129,.12);color:#34d399;font-weight:700;padding:2px 8px;border-radius:99px;font-size:10px">💚 PIX</span>'
                 }
             </p>
-            <p style="font-size:11px;color:#9ca3af;margin-bottom:.75rem;line-height:1.4">${p.itens || '—'}</p>
+            <p style="font-size:11px;color:#9ca3af;margin-bottom:.75rem;line-height:1.4">${p.itens || '--'}</p>
             <div style="display:flex;gap:.625rem;margin-top:.25rem">
                 ${p.status === 'Pago'
                     ? `<div style="flex:1;text-align:center;font-size:11px;color:#34d399;font-weight:700;padding:10px 0"><i class="fas fa-check-double"></i> Pagamento confirmado</div>`
                     : p.status === 'Confirmado'
-                        ? `<div style="flex:1;text-align:center;font-size:11px;color:#60a5fa;font-weight:700;padding:10px 0"><i class="fas fa-credit-card"></i> Pago no cartão · confirmar entrega</div>`
+                        ? `<div style="flex:1;text-align:center;font-size:11px;color:#60a5fa;font-weight:700;padding:10px 0"><i class="fas fa-credit-card"></i> Pago no cartao . confirmar entrega</div>`
                         : `<button onclick="marcarComoPago(${p.id})"
                                   style="flex:1;padding:10px;border-radius:10px;background:#059669;color:white;font-weight:800;font-size:12px;border:none;cursor:pointer;letter-spacing:.04em;font-family:inherit"
                                   onmouseover="this.style.background='#10b981'" onmouseout="this.style.background='#059669'">
@@ -174,13 +174,13 @@ function renderizarPedidos(pedidos) {
 }
 
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // EXCLUIR PEDIDO
-// ─────────────────────────────────────────
+// -----------------------------------------
 function abrirConfirmDelete(id, nomeCliente) {
     pedidoParaDeletar = id;
     const desc = document.getElementById('confirmDeleteDesc');
-    if (desc) desc.innerHTML = `Pedido de <strong>${nomeCliente || 'cliente'}</strong> será removido permanentemente.<br><span style="color:#fbbf24;font-size:11px">⚠️ Esta ação não pode ser desfeita.</span>`;
+    if (desc) desc.innerHTML = `Pedido de <strong>${nomeCliente || 'cliente'}</strong> sera removido permanentemente.<br><span style="color:#fbbf24;font-size:11px">⚠️ Esta acao nao pode ser desfeita.</span>`;
     const modal = document.getElementById('modalConfirmDelete');
     if (modal) modal.style.display = 'flex';
 }
@@ -205,9 +205,9 @@ async function marcarComoPago(id) {
     if (!error) await carregarDados();
 }
 
-// ─────────────────────────────────────────
-// 8. INVENTÁRIO
-// ─────────────────────────────────────────
+// -----------------------------------------
+// 8. INVENTRIO
+// -----------------------------------------
 function renderizarInventario(pizzas) {
     const el = document.getElementById('inventoryList');
     if (!el) return;
@@ -221,7 +221,7 @@ function renderizarInventario(pizzas) {
                 <p style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</p>
                 <p style="font-size:12px;color:#3b82f6;font-weight:700;margin:.1rem 0">
                     Venda: ${brl(Number(p.price))}
-                    ${p.cost ? `<span style="color:#6b7280;font-weight:500;margin-left:.5rem">· Custo: ${brl(Number(p.cost))}</span>` : ''}
+                    ${p.cost ? `<span style="color:#6b7280;font-weight:500;margin-left:.5rem">. Custo: ${brl(Number(p.cost))}</span>` : ''}
                 </p>
                 <div style="display:flex;align-items:center;gap:.5rem;margin-top:.35rem">
                     <button onclick="alterarEstoque('${p.id}',-1)" style="width:28px;height:28px;border-radius:8px;background:rgba(239,68,68,.15);color:#f87171;border:none;font-size:16px;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center">−</button>
@@ -250,26 +250,26 @@ async function alterarEstoque(id, delta) {
 }
 
 async function deletarPizza(id) {
-    if (confirm('Remover este sabor do cardápio?')) {
+    if (confirm('Remover este sabor do cardapio?')) {
         await _supabase.from('pizzas').delete().eq('id', id);
         await carregarDados();
     }
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // 9. MODAL PIZZA
-// ─────────────────────────────────────────
+// -----------------------------------------
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // UPLOAD DE IMAGEM
-// ─────────────────────────────────────────
+// -----------------------------------------
 function previewImagem(input) {
     const file = input.files[0];
     if (!file) return;
 
     // Valida tamanho (5 MB)
     if (file.size > 5 * 1024 * 1024) {
-        alert('Imagem muito grande! Máximo 5 MB.');
+        alert('Imagem muito grande! Maximo 5 MB.');
         input.value = '';
         return;
     }
@@ -290,7 +290,7 @@ async function uploadImagemPizza(file, pizzaId) {
     if (loading) loading.classList.add('active');
 
     try {
-        // Nome único: id da pizza + timestamp + extensão
+        // Nome unico: id da pizza + timestamp + extensao
         const ext      = file.name.split('.').pop().toLowerCase();
         const fileName = `${pizzaId || Date.now()}_${Date.now()}.${ext}`;
 
@@ -298,13 +298,13 @@ async function uploadImagemPizza(file, pizzaId) {
             .from('pizzas')
             .upload(fileName, file, {
                 cacheControl: '3600',
-                upsert: true,          // substitui se já existir
+                upsert: true,          // substitui se ja existir
                 contentType: file.type
             });
 
         if (error) throw error;
 
-        // Retorna a URL pública da imagem
+        // Retorna a URL publica da imagem
         return STORAGE_URL + fileName;
 
     } catch (err) {
@@ -341,7 +341,7 @@ function prepararEdicao(id, nome, preco, custo, imageUrl) {
     document.getElementById('pizzaModalTitle').innerText = 'Editar Sabor';
     document.getElementById('modalPizza').dataset.editId = id;
 
-    // Se já tem imagem, mostra no preview
+    // Se ja tem imagem, mostra no preview
     if (imageUrl) {
         const preview = document.getElementById('uploadPreview');
         const area    = document.getElementById('uploadArea');
@@ -356,7 +356,7 @@ async function salvarPizza() {
     const cost     = document.getElementById('pCost').value;
     const id       = document.getElementById('modalPizza').dataset.editId;
 
-    if (!name || !price) { alert('Preencha Nome e Preço!'); return; }
+    if (!name || !price) { alert('Preencha Nome e Preco!'); return; }
 
     // Verifica se tem arquivo para upload
     const fileInput = document.getElementById('pizzaFileInput');
@@ -384,7 +384,7 @@ async function salvarPizza() {
             return;
         }
 
-        // Edição: faz upload e já tem o ID
+        // Edicao: faz upload e ja tem o ID
         const url = await uploadImagemPizza(file, id);
         if (url) imageUrl = url;
     }
@@ -400,9 +400,9 @@ async function salvarPizza() {
     await carregarDados();
 }
 
-// ─────────────────────────────────────────
-// 10. RELATÓRIOS
-// ─────────────────────────────────────────
+// -----------------------------------------
+// 10. RELATRIOS
+// -----------------------------------------
 function onPeriodoChange() {
     const v      = document.getElementById('filtro-periodo').value;
     const custom = document.getElementById('filtro-datas-custom');
@@ -448,8 +448,8 @@ function calcularIntervalo(periodo) {
 
 function labelPeriodo(periodo, inicio, fim) {
     const fmt = d => d.toLocaleDateString('pt-BR');
-    const mapa = { hoje:'Hoje', ontem:'Ontem', semana:'Esta semana', semana_passada:'Semana passada', mes:'Este mês', mes_passado:'Mês passado' };
-    return mapa[periodo] || `${fmt(inicio)} — ${fmt(fim)}`;
+    const mapa = { hoje:'Hoje', ontem:'Ontem', semana:'Esta semana', semana_passada:'Semana passada', mes:'Este mes', mes_passado:'Mes passado' };
+    return mapa[periodo] || `${fmt(inicio)} -- ${fmt(fim)}`;
 }
 
 function contarSabores(pedidos) {
@@ -488,7 +488,7 @@ async function gerarRelatorio() {
 
     ['rel-kpis','rel-chart-wrap','rel-sabores-wrap','rel-pedidos-wrap'].forEach(id => show(id, true));
 
-    // ── KPIs ──
+    // -- KPIs --
     const receita = filtrados.reduce((a,p) => a + Number(p.total||0), 0);
     const qtd     = filtrados.length;
     const ticket  = qtd > 0 ? receita / qtd : 0;
@@ -501,7 +501,7 @@ async function gerarRelatorio() {
     document.getElementById('rel-pizzas').innerText       = totalPizzas;
     document.getElementById('rel-periodo-label').innerText = labelPeriodo(periodo, intervalo.inicio, intervalo.fim);
 
-    // ── GRÁFICO DE BARRAS POR DIA ──
+    // -- GRFICO DE BARRAS POR DIA --
     const porDia = {};
     filtrados.forEach(p => {
         const dia = new Date(p.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
@@ -524,35 +524,35 @@ async function gerarRelatorio() {
         }
     });
 
-    // ── RANKING SABORES ──
+    // -- RANKING SABORES --
     const saboresOrdenados = Object.entries(sabores).sort((a,b) => b[1]-a[1]);
     document.getElementById('rel-sabores-body').innerHTML = saboresOrdenados.map(([s,q]) => `
         <tr>
             <td style="font-weight:700">${s}</td>
             <td style="color:#34d399;font-weight:800">${q}</td>
-            <td style="color:#9ca3af">${totalPizzas > 0 ? ((q/totalPizzas)*100).toFixed(1)+'%' : '—'}</td>
+            <td style="color:#9ca3af">${totalPizzas > 0 ? ((q/totalPizzas)*100).toFixed(1)+'%' : '--'}</td>
         </tr>`).join('');
 
-    // ── LISTA DE PEDIDOS ──
+    // -- LISTA DE PEDIDOS --
     document.getElementById('rel-pedidos-body').innerHTML = filtrados.map(p => {
         const dt = p.created_at
             ? new Date(p.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
-            : '—';
+            : '--';
         return `
         <tr>
             <td style="color:#3b82f6;font-weight:800">#${String(p.id).slice(-5)}</td>
             <td style="color:#9ca3af;white-space:nowrap">${dt}</td>
-            <td style="font-weight:600;white-space:nowrap">${p.cliente_nome||'—'}</td>
-            <td style="color:#9ca3af;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.itens||'—'}</td>
+            <td style="font-weight:600;white-space:nowrap">${p.cliente_nome||'--'}</td>
+            <td style="color:#9ca3af;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.itens||'--'}</td>
             <td style="color:#34d399;font-weight:800;white-space:nowrap">${brl(p.total||0)}</td>
             <td><span class="badge ${p.status==='Pago'?'badge-pago':'badge-pendente'}">${(p.status||'Pendente').toUpperCase()}</span></td>
         </tr>`;
     }).join('');
 }
 
-// ─────────────────────────────────────────
-// 11. NAVEGAÇÃO
-// ─────────────────────────────────────────
+// -----------------------------------------
+// 11. NAVEGAO
+// -----------------------------------------
 const SECTIONS = ['dash','relatorio','orders','inventory'];
 
 function showSection(id) {
@@ -568,9 +568,9 @@ function showSection(id) {
     if (main) main.scrollTop = 0;
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // 12. REALTIME
-// ─────────────────────────────────────────
+// -----------------------------------------
 function iniciarRealtime() {
     _supabase.channel('realtime-admin')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, async (payload) => {
@@ -585,26 +585,4 @@ function iniciarRealtime() {
 
 function playNotificationSound() {
     try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch(e) {}
-}
-// ── Toggle visibilidade da senha ────────────────────────────
-function toggleVerSenha() {
-    const input = document.getElementById('adminPass');
-    const icone = document.getElementById('iconeOlho');
-    if (!input || !icone) return;
-
-    // Guarda a posição do cursor antes de trocar o tipo
-    const pos = input.selectionStart;
-
-    if (input.type === 'password') {
-        input.type = 'text';
-        input.style.letterSpacing = '.05em';
-        icone.className = 'fas fa-eye-slash';
-    } else {
-        input.type = 'password';
-        input.style.letterSpacing = '.15em';
-        icone.className = 'fas fa-eye';
-    }
-
-    // Restaura cursor sem chamar focus() (que reverte o tipo no iOS)
-    try { input.setSelectionRange(pos, pos); } catch(e) {}
 }
