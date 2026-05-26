@@ -632,8 +632,12 @@ async function enviarComprovante(pedidoId, nomeCliente, total) {
             status.textContent      = `📎 Arquivo vinculado ao pedido ${pedidoCodigo(pedidoId)}`;
         }
 
+        // Salva URL do comprovante no pedido
+        const urlPublica = `${supabaseUrl}/storage/v1/object/public/comprovantes/${nome}`;
+        await _supabase.from('pedidos').update({ comprovante_url: urlPublica }).eq('id', pedidoId);
+
         // Após upload, abre WhatsApp automaticamente
-        _arquivoComprovante = null; // libera memória
+        _arquivoComprovante = null;
         setTimeout(() => abrirWhatsapp(pedidoId, nomeCliente, total, true), 800);
 
     } catch (err) {
@@ -665,12 +669,15 @@ function abrirWhatsapp(pedidoId, nomeCliente, total, aposUpload = false) {
 }
 
 function toggleCart() {
-    document.getElementById('cartSidebar').classList.toggle('translate-x-full');
+    const sidebar = document.getElementById('cartSidebar');
+    sidebar.classList.toggle('translate-x-full');
+    document.body.classList.toggle('cart-open', !sidebar.classList.contains('translate-x-full'));
 }
 
 function validarEFinalizar() {
     if (cart.length === 0) { alert('Carrinho vazio! Adicione ao menos um sabor.'); return; }
     document.getElementById('cartSidebar').classList.add('translate-x-full');
+    document.body.classList.remove('cart-open');
     document.getElementById('modalIdentificacao').classList.remove('hidden');
     selecionarPagamento('pix');
 }
