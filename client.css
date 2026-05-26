@@ -5,15 +5,18 @@
 
 /* ── BOTÃO ADMIN FIXO ── */
         #btn-go-admin {
-            position: fixed; top: .875rem; right: .875rem; z-index: 200;
+            position: fixed; top: .875rem; right: .875rem; z-index: 55;
             background: rgba(30,58,138,.85); backdrop-filter: blur(8px);
             color: white; border: 1px solid rgba(255,255,255,.2); border-radius: 10px;
             padding: 7px 13px; font-size: 11px; font-weight: 800;
             cursor: pointer; display: flex; align-items: center; gap: 6px;
-            text-decoration: none; letter-spacing: .03em; transition: background .2s;
+            text-decoration: none; letter-spacing: .03em;
+            transition: background .2s, opacity .2s;
             font-family: 'Inter', sans-serif;
         }
         #btn-go-admin:hover { background: rgba(37,99,235,.9); }
+        /* Some quando o carrinho está aberto */
+        body.cart-open #btn-go-admin { opacity: 0; pointer-events: none; }
 
         /* ── BANNERS PWA ── */
         .pwa-banner {
