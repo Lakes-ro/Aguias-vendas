@@ -7,6 +7,13 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
+
+// -- Codigo exibivel do pedido (usa campo codigo do banco se existir) --
+function codigoPedido(p) {
+    if (p.codigo) return p.codigo;
+    return 'AC-' + String(p.id).padStart(4, '0');
+}
+
 // -- Formatacao monetaria BR (1.999,99) ----------------------
 function brl(value) {
     return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -137,7 +144,7 @@ function renderizarPedidos(pedidos) {
         return `
         <div class="item-card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-                <span style="font-size:11px;font-weight:800;color:#3b82f6">#${String(p.id).slice(-5)}</span>
+                <span style="font-size:11px;font-weight:800;color:#3b82f6">${codigoPedido(p)}</span>
                 <div style="display:flex;align-items:center;gap:.5rem">
                     <span class="badge ${p.status==='Pago'?'badge-pago':'badge-pendente'}">${(p.status||'Pendente').toUpperCase()}</span>
                     <span style="font-weight:900;color:#34d399;font-size:14px">${brl(p.total||0)}</span>
@@ -152,6 +159,13 @@ function renderizarPedidos(pedidos) {
                 }
             </p>
             <p style="font-size:11px;color:#9ca3af;margin-bottom:.75rem;line-height:1.4">${p.itens || '--'}</p>
+            ${p.comprovante_url ? `<a href="${p.comprovante_url}" target="_blank"
+               style="display:inline-flex;align-items:center;gap:6px;margin-bottom:.625rem;
+                      padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;
+                      background:rgba(16,185,129,.12);color:#34d399;
+                      border:1px solid rgba(16,185,129,.25);text-decoration:none;">
+                <i class="fas fa-image"></i> Ver Comprovante PIX
+            </a>` : ''}
             <div style="display:flex;gap:.625rem;margin-top:.25rem">
                 ${p.status === 'Pago'
                     ? `<div style="flex:1;text-align:center;font-size:11px;color:#34d399;font-weight:700;padding:10px 0"><i class="fas fa-check-double"></i> Pagamento confirmado</div>`
@@ -540,7 +554,7 @@ async function gerarRelatorio() {
             : '--';
         return `
         <tr>
-            <td style="color:#3b82f6;font-weight:800">#${String(p.id).slice(-5)}</td>
+            <td style="color:#3b82f6;font-weight:800">${codigoPedido(p)}</td>
             <td style="color:#9ca3af;white-space:nowrap">${dt}</td>
             <td style="font-weight:600;white-space:nowrap">${p.cliente_nome||'--'}</td>
             <td style="color:#9ca3af;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.itens||'--'}</td>
@@ -585,4 +599,20 @@ function iniciarRealtime() {
 
 function playNotificationSound() {
     try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch(e) {}
+}
+// -- Toggle visibilidade da senha ----------------------------
+function toggleVerSenha() {
+    const input = document.getElementById('adminPass');
+    const icone = document.getElementById('iconeOlho');
+    if (!input || !icone) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        input.style.letterSpacing = '.05em';
+        icone.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        input.style.letterSpacing = '.15em';
+        icone.className = 'fas fa-eye';
+    }
+    input.focus();
 }
