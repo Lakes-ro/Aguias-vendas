@@ -664,7 +664,7 @@ function abrirWhatsapp(pedidoId, nomeCliente, total, aposUpload = false) {
         : `Olá! Sou ${nomeCliente}. Acabei de fazer o pedido ${pedidoCodigo(pedidoId)} no valor de ${brl(total)}. Segue meu comprovante PIX.`;
 
     const msg    = encodeURIComponent(prefixo);
-    const zapUrl = `https://wa.me/5535991264352?text=${msg}`;
+    const zapUrl = `https://wa.me/5522998620353?text=${msg}`;
     window.open(zapUrl, '_blank');
 }
 
