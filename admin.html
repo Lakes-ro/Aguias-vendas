@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Admin | AGUIAS DE CRISTO</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="pwa-update.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="loginOverlay">
+    <div class="glass" style="width:100%;max-width:320px;padding:2.5rem;text-align:center;border-color:rgba(59,130,246,.3)">
+        <div style="width:64px;height:64px;border-radius:50%;background:rgba(59,130,246,.15);
+                    box-shadow:0 0 28px rgba(59,130,246,.4);display:flex;align-items:center;
+                    justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;color:#60a5fa">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <h2 style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.25rem">ÁREA RESTRITA</h2>
+        <p style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.75rem">Diretoria do Clube</p>
+        <form id="loginForm" style="display:flex;flex-direction:column;gap:.75rem">
+            <!-- Campo senha + olhinho -->
+            <div style="position:relative;margin-bottom:0">
+                <input type="password" id="adminPass" placeholder="Senha mestra"
+                       class="modal-input"
+                       style="text-align:center;font-size:1.1rem;letter-spacing:.15em;margin-bottom:0;padding-right:3rem;width:100%">
+                <button type="button"
+                        id="toggleSenha"
+                        onclick="toggleVerSenha()"
+                        title="Mostrar/ocultar senha"
+                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                               background:transparent;border:none;cursor:pointer;
+                               color:#6b7280;font-size:17px;padding:4px;
+                               display:flex;align-items:center;justify-content:center;
+                               transition:color .2s;line-height:1"
+                        onmouseover="this.style.color='#3b82f6'"
+                        onmouseout="this.style.color='#6b7280'">
+                    <i class="fas fa-eye" id="iconeOlho"></i>
+                </button>
+            </div>
+            <button type="submit"
+                    style="width:100%;padding:1rem;border-radius:12px;background:#2563eb;color:white;
+                           font-weight:900;font-size:.8rem;letter-spacing:.1em;border:none;cursor:pointer;transition:background .2s"
+                    onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
+                ENTRAR
+            </button>
+        </form>
+        <p id="loginError" style="color:#f87171;font-size:11px;font-weight:700;margin-top:.75rem;display:none">
+            Senha incorreta. Tente novamente.
+        </p>
+    </div>
+</div>
+
+<!-- ════════════ DASHBOARD ════════════ -->
+<div id="mainDashboard">
+
+    <!-- SIDEBAR DESKTOP -->
+    <aside id="sidebar">
+        <div style="padding:.25rem .5rem;margin-bottom:1.25rem">
+            <p style="color:#3b82f6;font-weight:900;font-size:15px;letter-spacing:-.02em">🦅 CLUBE ADMIN</p>
+            <p style="font-size:10px;color:#374151;margin-top:2px">Aguias de Cristo</p>
+        </div>
+
+        <button onclick="showSection('dash')"      id="btn-dash"      class="snav-btn active"><i class="fas fa-chart-line"            style="width:16px"></i> Dashboard</button>
+        <button onclick="showSection('relatorio')" id="btn-relatorio" class="snav-btn"><i class="fas fa-file-invoice-dollar"           style="width:16px"></i> Relatórios</button>
+        <button onclick="showSection('orders')"    id="btn-orders"    class="snav-btn"><i class="fas fa-shopping-basket"              style="width:16px"></i> Pedidos</button>
+        <button onclick="showSection('inventory')" id="btn-inventory" class="snav-btn"><i class="fas fa-pizza-slice"                  style="width:16px"></i> Estoque</button>
+
+        <div style="flex:1"></div>
+
+        <a href="index.html" target="_blank" class="snav-btn store" style="margin-bottom:.375rem">
+            <i class="fas fa-store" style="width:16px"></i> Ver Loja
+        </a>
+        <button onclick="location.reload()" class="snav-btn" style="font-family:inherit">
+            <i class="fas fa-sign-out-alt" style="width:16px"></i> Sair
+        </button>
+    </aside>
+
+    <!-- CONTEÚDO -->
+    <main id="main-content">
+
+        <!-- ══ DASHBOARD ══ -->
+        <section id="sec-dash" class="section active">
+            <div style="margin-bottom:1.25rem">
+                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Performance</h2>
+                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Tempo real · Atualização automática</p>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card" style="border-left:3px solid #10b981"><p class="kpi-label">Receita Total</p><p class="kpi-value" id="receitaBruta">R$ 0,00</p><p class="kpi-sub">Todos os pedidos</p></div>
+                <div class="kpi-card" style="border-left:3px solid #3b82f6"><p class="kpi-label">Pedidos</p><p class="kpi-value" id="totalPedidos">0</p><p class="kpi-sub">Registrados</p></div>
+                <div class="kpi-card" style="border-left:3px solid #facc15"><p class="kpi-label">Pendentes</p><p class="kpi-value" id="totalPendentes">0</p><p class="kpi-sub">Aguardando</p></div>
+                <div class="kpi-card" style="border-left:3px solid #10b981"><p class="kpi-label">Confirmados</p><p class="kpi-value" id="totalPagos">0</p><p class="kpi-sub">Pagos</p></div>
+            </div>
+
+            <div class="glass" style="padding:1.25rem;margin-bottom:1rem">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-chart-pie" style="color:#60a5fa;margin-right:.4rem"></i> Vendas por Sabor
+                </p>
+                <div style="position:relative;height:clamp(180px,35vw,240px);width:100%">
+                    <canvas id="chartFlavors"></canvas>
+                </div>
+            </div>
+
+            <div class="glass" style="padding:1.25rem">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-clock" style="color:#facc15;margin-right:.4rem"></i> Últimos Pedidos
+                </p>
+                <div id="rankingTableBody"></div>
+            </div>
+        </section>
+
+        <!-- ══ RELATÓRIOS ══ -->
+        <section id="sec-relatorio" class="section">
+            <div style="margin-bottom:1.25rem">
+                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Relatórios</h2>
+                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Análise financeira por período.</p>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <span class="filter-label">Período</span>
+                    <select id="filtro-periodo" class="filter-select" onchange="onPeriodoChange()">
+                        <option value="hoje">Hoje</option>
+                        <option value="ontem">Ontem</option>
+                        <option value="semana" selected>Esta semana</option>
+                        <option value="semana_passada">Semana passada</option>
+                        <option value="mes">Este mês</option>
+                        <option value="mes_passado">Mês passado</option>
+                        <option value="personalizado">Personalizado...</option>
+                    </select>
+                </div>
+                <div id="filtro-datas-custom" style="display:none;flex:2;gap:.625rem;flex-wrap:wrap">
+                    <div class="filter-group">
+                        <span class="filter-label">Data Início</span>
+                        <input type="date" id="filtro-inicio" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Data Fim</span>
+                        <input type="date" id="filtro-fim" class="filter-input">
+                    </div>
+                </div>
+                <div class="filter-group" style="min-width:140px;flex:0">
+                    <span class="filter-label">Status</span>
+                    <select id="filtro-status" class="filter-select">
+                        <option value="todos">Todos</option>
+                        <option value="Pago">Apenas pagos</option>
+                        <option value="Pendente">Apenas pendentes</option>
+                    </select>
+                </div>
+                <button class="btn-blue" onclick="gerarRelatorio()" style="align-self:flex-end">
+                    <i class="fas fa-search" style="margin-right:.4rem"></i> Gerar
+                </button>
+            </div>
+
+            <!-- KPIs do período -->
+            <div class="rel-grid" id="rel-kpis" style="display:none">
+                <div class="rel-card" style="border-left:3px solid #10b981">
+                    <p class="rel-title">Receita do Período</p>
+                    <p class="rel-value" id="rel-receita" style="color:#34d399">R$ 0,00</p>
+                    <p class="rel-sub" id="rel-periodo-label">—</p>
+                </div>
+                <div class="rel-card" style="border-left:3px solid #3b82f6">
+                    <p class="rel-title">Pedidos</p>
+                    <p class="rel-value" id="rel-qtd">0</p>
+                    <p class="rel-sub">No período</p>
+                </div>
+                <div class="rel-card" style="border-left:3px solid #f59e0b">
+                    <p class="rel-title">Ticket Médio</p>
+                    <p class="rel-value" id="rel-ticket" style="color:#fbbf24">R$ 0,00</p>
+                    <p class="rel-sub">Por pedido</p>
+                </div>
+                <div class="rel-card" style="border-left:3px solid #8b5cf6">
+                    <p class="rel-title">Pizzas Vendidas</p>
+                    <p class="rel-value" id="rel-pizzas" style="color:#a78bfa">0</p>
+                    <p class="rel-sub">Unidades</p>
+                </div>
+            </div>
+
+            <!-- Gráfico de barras por dia -->
+            <div class="glass" id="rel-chart-wrap" style="padding:1.25rem;margin-bottom:1rem;display:none">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-chart-bar" style="color:#60a5fa;margin-right:.4rem"></i> Receita por Dia
+                </p>
+                <div style="position:relative;height:clamp(160px,28vw,220px);width:100%">
+                    <canvas id="chartRelatorio"></canvas>
+                </div>
+            </div>
+
+            <!-- Ranking sabores -->
+            <div class="glass" id="rel-sabores-wrap" style="padding:1.25rem;margin-bottom:1rem;display:none">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-trophy" style="color:#fbbf24;margin-right:.4rem"></i> Ranking de Sabores
+                </p>
+                <div style="overflow-x:auto">
+                    <table class="tabela-rel">
+                        <thead><tr><th>Sabor</th><th>Qtd.</th><th>% Total</th></tr></thead>
+                        <tbody id="rel-sabores-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lista de pedidos do período -->
+            <div class="glass" id="rel-pedidos-wrap" style="padding:1.25rem;display:none">
+                <p style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem">
+                    <i class="fas fa-list" style="color:#34d399;margin-right:.4rem"></i> Pedidos do Período
+                </p>
+                <div style="overflow-x:auto">
+                    <table class="tabela-rel">
+                        <thead><tr><th>#</th><th>Data</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th></tr></thead>
+                        <tbody id="rel-pedidos-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vazio -->
+            <div id="rel-vazio" style="display:none;text-align:center;padding:3rem 1rem;color:#4b5563">
+                <i class="fas fa-chart-bar" style="font-size:2.5rem;margin-bottom:.875rem;display:block;opacity:.3"></i>
+                <p style="font-weight:700;margin-bottom:.25rem;color:#6b7280">Nenhum pedido encontrado</p>
+                <p style="font-size:12px">Ajuste o período ou o filtro de status e clique em Gerar.</p>
+            </div>
+        </section>
+
+        <!-- ══ PEDIDOS ══ -->
+        <section id="sec-orders" class="section">
+            <div style="margin-bottom:1.25rem">
+                <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Pedidos</h2>
+                <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Confirme os pagamentos abaixo.</p>
+            </div>
+            <div id="ordersTableBody"></div>
+        </section>
+
+        <!-- ══ ESTOQUE ══ -->
+        <section id="sec-inventory" class="section">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
+                <div>
+                    <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.03em">Estoque</h2>
+                    <p style="font-size:11px;color:#6b7280;margin-top:.2rem">Sabores e quantidades.</p>
+                </div>
+                <button onclick="abrirModal()"
+                        style="display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;border-radius:12px;
+                               background:#2563eb;color:white;font-weight:900;font-size:13px;border:none;cursor:pointer;
+                               transition:background .2s;white-space:nowrap;font-family:inherit"
+                        onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
+                    <i class="fas fa-plus"></i> Novo Sabor
+                </button>
+            </div>
+            <div id="inventoryList"></div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAV MOBILE -->
+    <nav id="bottom-nav">
+        <div class="bnav-inner">
+            <button onclick="showSection('dash')"      id="bnav-dash"      class="bnav-btn active"><i class="fas fa-chart-line"></i><span>Dash</span></button>
+            <button onclick="showSection('relatorio')" id="bnav-relatorio" class="bnav-btn"><i class="fas fa-file-invoice-dollar"></i><span>Relatório</span></button>
+            <button onclick="showSection('orders')"    id="bnav-orders"    class="bnav-btn"><i class="fas fa-shopping-basket"></i><span>Pedidos</span></button>
+            <button onclick="showSection('inventory')" id="bnav-inventory" class="bnav-btn"><i class="fas fa-pizza-slice"></i><span>Estoque</span></button>
+            <a href="index.html" target="_blank"       class="bnav-btn store-btn"><i class="fas fa-store"></i><span>Loja</span></a>
+            <button onclick="location.reload()"        class="bnav-btn logout-btn"><i class="fas fa-sign-out-alt"></i><span>Sair</span></button>
+        </div>
+    </nav>
+</div>
+
+<!-- ════════════ MODAL PIZZA ════════════ -->
+<div id="modalPizza" class="modal-overlay">
+    <div class="modal-box">
+        <h2 id="pizzaModalTitle" style="font-size:1.2rem;font-weight:900;margin-bottom:1.25rem">Novo Sabor</h2>
+        <input type="text"   id="pName"     placeholder="Nome da Pizza"                class="modal-input">
+        <input type="number" id="pPrice"    placeholder="Preço de venda (R$)"          class="modal-input" step="0.01">
+        <input type="number" id="pCost"     placeholder="Custo de produção (R$) — opcional" class="modal-input" step="0.01">
+        <!-- Upload de imagem -->
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('pizzaFileInput').click()">
+            <input type="file" id="pizzaFileInput" accept="image/jpeg,image/jpg,image/png,image/webp"
+                   onchange="previewImagem(this)">
+            <img id="uploadPreview" class="upload-preview" src="" alt="Preview">
+            <div class="upload-placeholder">
+                <i class="fas fa-camera" style="font-size:1.5rem;color:#4b5563;margin-bottom:.5rem;display:block"></i>
+                <p style="font-size:13px;font-weight:700;color:#6b7280">Clique para escolher uma foto</p>
+                <p style="font-size:11px;color:#4b5563;margin-top:.25rem">JPG, PNG ou WEBP · máx. 5 MB</p>
+            </div>
+            <div class="upload-loading" id="uploadLoading">
+                <i class="fas fa-spinner fa-spin" style="margin-right:.5rem"></i> Enviando foto...
+            </div>
+        </div>
+        <!-- URL manual como fallback -->
+        <input type="url" id="pImageUrl" placeholder="Ou cole uma URL de imagem (opcional)"
+               class="modal-input" style="font-size:12px;padding:10px 14px">
+        <div style="display:flex;gap:.75rem">
+            <button onclick="salvarPizza()"
+                    style="flex:1;padding:1rem;border-radius:12px;background:#2563eb;color:white;
+                           font-weight:900;font-size:13px;border:none;cursor:pointer;transition:background .2s;font-family:inherit"
+                    onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='#2563eb'">
+                SALVAR
+            </button>
+            <button onclick="fecharModal()"
+                    style="flex:1;padding:1rem;border-radius:12px;background:rgba(255,255,255,.06);
+                           color:#9ca3af;font-weight:900;font-size:13px;border:none;cursor:pointer;font-family:inherit">
+                CANCELAR
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════ MODAL CONFIRMAR EXCLUSÃO DE PEDIDO ════════════ -->
+<div id="modalConfirmDelete" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem">
+    <div class="confirm-box">
+        <div class="confirm-icon"><i class="fas fa-trash-alt"></i></div>
+        <p class="confirm-title">Remover este pedido?</p>
+        <p class="confirm-desc" id="confirmDeleteDesc">Esta ação não pode ser desfeita.<br>O pedido será excluído permanentemente do banco de dados.</p>
+        <div class="confirm-btns">
+            <button class="btn-confirm-delete" onclick="confirmarExclusaoPedido()">
+                <i class="fas fa-trash" style="margin-right:.4rem"></i> Sim, remover
+            </button>
+            <button class="btn-confirm-cancel" onclick="fecharConfirmDelete()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="admin.js"></script>
+</body>
+</html>
