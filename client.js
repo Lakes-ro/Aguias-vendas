@@ -687,7 +687,7 @@ function fecharModalIdentificacao() {
 }
 
 function copyPix() {
-    navigator.clipboard.writeText('tesouraria.aguiasdecristo@gmail.com').then(() => alert('Chave PIX copiada!'));
+    navigator.clipboard.writeText('joselucasdesouza36@gmail.com').then(() => alert('Chave PIX copiada!'));
 }
 
 // ============================================================
